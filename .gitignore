@@ -1,0 +1,7 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea/
+project/project/
+project/target/
+protocol/query/target/
+service/currency/target/
+target/
