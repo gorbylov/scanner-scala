@@ -5,6 +5,9 @@ import com.scanner.service.core.Launcher
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 /**
   * Created by Iurii on 06-03-2017.
   */
@@ -15,6 +18,7 @@ object CurrencyApp extends Launcher with CurrencyConfig {
   override def log = Logger(LoggerFactory.getLogger(getClass))
   override def props: Props = Props(
     classOf[CurrencyService],
-    system.scheduler
+    system.scheduler,
+    interval hours
   )
 }

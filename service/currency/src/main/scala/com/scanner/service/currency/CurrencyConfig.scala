@@ -7,4 +7,5 @@ import com.typesafe.config.ConfigFactory
   */
 trait CurrencyConfig {
   private val config = ConfigFactory.load()
+  val interval = config.getInt("scanner.scheduler.interval")
 }

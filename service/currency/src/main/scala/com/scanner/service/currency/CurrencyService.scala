@@ -9,16 +9,16 @@ import io.circe.parser._
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
-
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
 
 /**
   * Created by Iurii on 06-03-2017.
   */
-class CurrencyService(scheduler: Scheduler) extends Actor {
+class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Actor {
 
-  scheduler.schedule(0 seconds, 5 seconds, self, UpdateCurrencyStateQuery)
+  scheduler.schedule(interval, interval, self, UpdateCurrencyStateQuery)
 
   val log = Logger(LoggerFactory.getLogger(getClass))
   var state: Map[String, BigDecimal] = fetchCurrencies()
