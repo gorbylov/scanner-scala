@@ -14,3 +14,5 @@ case class ConvertCurrencyQuery(
   value: BigDecimal
 ) extends CurrencyQuery
 case class ConvertCurrencyResponse(value: Option[BigDecimal]) extends CurrencyResponse
+
+case object UpdateCurrencyStateQuery extends Query
