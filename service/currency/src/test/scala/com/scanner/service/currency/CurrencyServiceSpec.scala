@@ -1,0 +1,39 @@
+package com.scanner.service.currency
+
+import akka.actor.ActorSystem
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import com.scanner.query.currency.{ConvertCurrencyQuery, ConvertCurrencyResponse, UpdateCurrencyStateQuery}
+import org.scalatest.{Matchers, WordSpecLike}
+
+/**
+  * Created by Iurii on 06-03-2017.
+  */
+class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
+  with ImplicitSender
+  with WordSpecLike
+  with Matchers {
+
+  "CurrencyService actor" should {
+
+    val actorRef = TestActorRef(new CurrencyService(system.scheduler) {
+      override def fetchCurrencies(): Map[String, BigDecimal] = Map("EUR" -> 2, "UAH" -> 3) // preventing api calling
+    })
+
+    "receive converted value for correct currencies" in {
+      actorRef ! ConvertCurrencyQuery("EUR", "UAH", 1)
+      expectMsg(ConvertCurrencyResponse(Some(1.5)))
+    }
+
+    "receive empty value for incorrect currencies" in {
+      actorRef ! ConvertCurrencyQuery("ZZZ", "FFF", 1)
+      expectMsg(ConvertCurrencyResponse(None))
+    }
+
+    "update currency state" in {
+      val stateBeforeUpdate = actorRef.underlyingActor.state
+      actorRef ! UpdateCurrencyStateQuery
+      val stateAfterUpdate = actorRef.underlyingActor.state
+      (stateBeforeUpdate eq stateAfterUpdate) shouldBe false
+    }
+  }
+}

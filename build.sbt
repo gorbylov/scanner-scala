@@ -7,19 +7,28 @@ val baseSettings = Seq(
   scalaVersion := "2.12.1"
 )
 
-def module(name: String, location: String, dependencies: Seq[ClasspathDep[ProjectReference]] = Nil, libs: Seq[ModuleID] = Nil) = {
-  Project(name, file(location), dependencies = dependencies) //TODO find out project creation
-    .settings(baseSettings)
-    .settings(libraryDependencies ++= libs)
-}
+def module(
+  name: String,
+  location: String,
+  dependencies: Seq[ClasspathDep[ProjectReference]] = Nil,
+  libs: Seq[ModuleID] = Nil
+) = Project(name, file(location), dependencies = dependencies)
+  .settings(baseSettings)
+  .settings(libraryDependencies ++= libs)
+
+def service(
+  name: String, location: String,
+  dependencies: Seq[ClasspathDep[ProjectReference]] = Nil,
+  libs: Seq[ModuleID] = Nil
+) = module(name, location, dependencies, libs)
+  .settings(Seq(fork in run := false))
+  //.settings(assemblySettings)
 
 // Dependencies
 // akka
-val akkaSuite = Seq(
-  "com.typesafe.akka" %% "akka-actor",
-  "com.typesafe.akka" %% "akka-slf4j"
-).map(_ % "2.4.17")
-val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.5.1" //TODO find out akka kryo
+val akkaVersion = "2.4.17"
+val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
+val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 //json
 val circeSuite = Seq(
   "io.circe" %% "circe-generic",
@@ -27,18 +36,20 @@ val circeSuite = Seq(
 ).map(_ % "0.7.0")
 // logging
 val logback = "ch.qos.logback" % "logback-classic" % "1.1.6"
-val loggly = "org.logback-extensions" % "logback-ext-loggly" % "0.1.2"
 val typeSafeLogs = "com.typesafe.scala-logging" % "scala-logging-slf4j_2.11" % "2.1.2"
+//test
+val akkaTest = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
 // Project
-lazy val root = (project in file(".")) //TODO find out lazy val and project
-  .aggregate(query, currency)
+lazy val root = (project in file("."))
+  .aggregate(query, core, currency)
   .settings(name := """scanner-server""")
   .settings(baseSettings)
-
-lazy val query = module(name = "query", location = "protocol/query", libs = Seq(akkaKryo))
+//protocol
+lazy val query = module(name = "query", location = "protocol/query")
 //services
 lazy val core = module(name = "service-core", location = "service/core",
-  dependencies = Seq(query), libs = akkaSuite ++ Seq(logback, typeSafeLogs))
-lazy val currency = module(name = "currency", location = "service/currency",
-  dependencies = Seq(core, query), libs = akkaSuite ++ circeSuite)
+  dependencies = Seq(query), libs = Seq(akkaActor, akkaSlf4j, logback, typeSafeLogs))
+lazy val currency = service(name = "currency", location = "service/currency",
+  dependencies = Seq(core, query), libs = Seq(scalaTest, akkaTest) ++ circeSuite)

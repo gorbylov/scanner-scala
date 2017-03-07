@@ -21,7 +21,7 @@ class CurrencyService(scheduler: Scheduler) extends Actor {
   scheduler.schedule(0 seconds, 5 seconds, self, UpdateCurrencyStateQuery)
 
   val log = Logger(LoggerFactory.getLogger(getClass))
-  val state: Map[String, BigDecimal] = fetchCurrencies()
+  var state: Map[String, BigDecimal] = fetchCurrencies()
 
   override def receive: Receive = {
     case ConvertCurrencyQuery(from, to, value) => sender ! ConvertCurrencyResponse(
@@ -29,7 +29,7 @@ class CurrencyService(scheduler: Scheduler) extends Actor {
     )
     case UpdateCurrencyStateQuery =>
       log.info("Updating currency state.")
-      state ++ fetchCurrencies()
+      state = fetchCurrencies()
   }
 
   def convert(from: String, to: String, value: BigDecimal): Option[BigDecimal] = {
