@@ -3,7 +3,7 @@ package com.scanner.graphs
 /**
   * Created by IGorbylov on 08.03.2017.
   */
-class SimpleGraph[V](val graph: Map[V, List[List[V]]]) extends Graph[V]{
+class SimpleGraph[V](graph: Map[V, List[List[V]]]) extends Graph[V] {
 
   override def search(from: V, to: V, edgeWeightResolver: ((V, V)) => BigDecimal): List[Conn] = {
     graph.get(from).fold(List[Conn]()){ connections =>
@@ -19,6 +19,7 @@ class SimpleGraph[V](val graph: Map[V, List[List[V]]]) extends Graph[V]{
           conn1Weight < conn2Weight
         }))
         .map(connection => connection.slice(0, connection.indexOf(to) + 1))
+        .distinct
     }
   }
 

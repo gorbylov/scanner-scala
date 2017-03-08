@@ -41,10 +41,15 @@ class SimpleGraphBuilderSpec extends WordSpec with Matchers{
       assertGraphWithDepth(graph, depth)
     }
 
+    "build correct graph with 3 depth" in {
+      implicit val depth = 3
+      val graph = SimpleGraphBuilder().build(relations)
+      assertGraphWithDepth(graph, depth)
+    }
+
     "build epty graph with -1 depth" in {
       implicit val depth = -1
       val graph = SimpleGraphBuilder().build(relations)
-      println(graph)
       assertEmptyGraph(graph)
     }
 
@@ -77,7 +82,6 @@ class SimpleGraphBuilderSpec extends WordSpec with Matchers{
           List(List("D", "B"), List("D", "A"), List("D", "C")).foreach(list =>
             graph.getConnections("D").get.contains(list) shouldBe true
           )
-          graph.getConnections("E") shouldBe None
         case 2 =>
           List(List("A", "D", "B"), List("A", "B", "E"), List("A", "B", "C"), List("A", "D", "C")).foreach(list =>
             graph.getConnections("A").get.contains(list) shouldBe true
@@ -89,6 +93,19 @@ class SimpleGraphBuilderSpec extends WordSpec with Matchers{
             graph.getConnections("C").get.contains(list) shouldBe true
           )
           List(List("D", "A", "B"), List("D", "B", "A"), List("D", "C", "A"), List("D", "A", "E"), List("D", "B", "C"), List("D", "B", "E"), List("D", "A", "C")).foreach(list =>
+            graph.getConnections("D").get.contains(list) shouldBe true
+          )
+        case 3 =>
+          List(List("A", "D", "B", "E"), List("A", "D", "B", "C")).foreach(list =>
+            graph.getConnections("A").get.contains(list) shouldBe true
+          )
+          List(List("B", "C", "A", "D"), List("B", "C", "A", "E"), List("B", "A", "D", "C")).foreach(list =>
+            graph.getConnections("B").get.contains(list) shouldBe true
+          )
+          List(List("C", "A", "B", "E"), List("C", "A", "D", "B")).foreach(list =>
+            graph.getConnections("C").get.contains(list) shouldBe true
+          )
+          List(List("D", "A", "B", "C"), List("D", "A", "B", "E"), List("D", "B", "C", "A"), List("D", "B", "A", "C"), List("D", "C", "A", "E"), List("D", "C", "A", "B"), List("D", "B", "A", "E")).foreach(list =>
             graph.getConnections("D").get.contains(list) shouldBe true
           )
       }
