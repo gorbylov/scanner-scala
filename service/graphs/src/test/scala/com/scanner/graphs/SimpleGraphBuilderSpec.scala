@@ -23,13 +23,84 @@ class SimpleGraphBuilderSpec extends WordSpec with Matchers{
       "D" -> "C"
     )
 
-    "build graph" in {
+    "build correct graph with 0 depth" in {
       implicit val depth = 0
       val graph = SimpleGraphBuilder().build(relations)
-      graph.getConnections("A") shouldBe Some(List(List("A")))
-      graph.getConnections("B") shouldBe Some(List(List("B")))
-      graph.getConnections("F") shouldBe None
+      assertGraphWithDepth(graph, depth)
     }
+
+    "build correct graph with 1 depth" in {
+      implicit val depth = 1
+      val graph = SimpleGraphBuilder().build(relations)
+      assertGraphWithDepth(graph, depth)
+    }
+
+    "build correct graph with 2 depth" in {
+      implicit val depth = 2
+      val graph = SimpleGraphBuilder().build(relations)
+      assertGraphWithDepth(graph, depth)
+    }
+
+    "build epty graph with -1 depth" in {
+      implicit val depth = -1
+      val graph = SimpleGraphBuilder().build(relations)
+      println(graph)
+      assertEmptyGraph(graph)
+    }
+
+    "build empty graph with empty list of relations" in {
+      implicit val depth = 2
+      val graph = SimpleGraphBuilder().build(List[(String, String)]())
+      assertEmptyGraph(graph)
+    }
+  }
+
+  private def assertGraphWithDepth(graph: Graph[String], depth: Int) = {
+    for (value <- 0 to depth) {
+      value match {
+        case 0 =>
+          graph.getConnections("A").get.contains(List("A")) shouldBe true
+          graph.getConnections("B").get.contains(List("B")) shouldBe true
+          graph.getConnections("C").get.contains(List("C")) shouldBe true
+          graph.getConnections("D").get.contains(List("D")) shouldBe true
+          graph.getConnections("E") shouldBe None
+        case 1 =>
+          List(List("A", "C"), List("A", "E"), List("A", "B"), List("A", "D")).foreach(list =>
+            graph.getConnections("A").get.contains(list) shouldBe true
+          )
+          List(List("B", "C"), List("B", "A"), List("B", "E")).foreach(list =>
+            graph.getConnections("B").get.contains(list) shouldBe true
+          )
+          List(List("C", "A")).foreach(list =>
+            graph.getConnections("C").get.contains(list) shouldBe true
+          )
+          List(List("D", "B"), List("D", "A"), List("D", "C")).foreach(list =>
+            graph.getConnections("D").get.contains(list) shouldBe true
+          )
+          graph.getConnections("E") shouldBe None
+        case 2 =>
+          List(List("A", "D", "B"), List("A", "B", "E"), List("A", "B", "C"), List("A", "D", "C")).foreach(list =>
+            graph.getConnections("A").get.contains(list) shouldBe true
+          )
+          List(List("B", "A", "C"), List("B", "C", "A"), List("B", "A", "E"), List("B", "A", "D")).foreach(list =>
+            graph.getConnections("B").get.contains(list) shouldBe true
+          )
+          List(List("C", "A", "D"), List("C", "A", "E"), List("C", "A", "B")).foreach(list =>
+            graph.getConnections("C").get.contains(list) shouldBe true
+          )
+          List(List("D", "A", "B"), List("D", "B", "A"), List("D", "C", "A"), List("D", "A", "E"), List("D", "B", "C"), List("D", "B", "E"), List("D", "A", "C")).foreach(list =>
+            graph.getConnections("D").get.contains(list) shouldBe true
+          )
+      }
+    }
+  }
+
+  private def assertEmptyGraph(graph: Graph[String]) = {
+    graph.getConnections("A") shouldBe None
+    graph.getConnections("B") shouldBe None
+    graph.getConnections("C") shouldBe None
+    graph.getConnections("D") shouldBe None
+    graph.getConnections("E") shouldBe None
   }
 
 }
