@@ -22,7 +22,6 @@ def service(
   libs: Seq[ModuleID] = Nil
 ) = module(name, location, dependencies, libs)
   .settings(Seq(fork in run := false))
-  //.settings(assemblySettings)
 
 // Dependencies
 // akka
@@ -47,18 +46,16 @@ val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % "10.0.4" % "test
 
 // Project
 lazy val root = (project in file("."))
-  .aggregate(query, core, currency)
+  .aggregate(query, core, api, currency)
   .settings(name := """scanner-server""")
   .settings(baseSettings)
 //protocol
 lazy val query = module(name = "query", location = "protocol/query")
 //services
 lazy val core = module(name = "service-core", location = "service/core",
-  dependencies = Seq(query), libs = Seq(akkaActor, akkaHttpCore, akkaCirce, akkaSlf4j,
-    logback, typeSafeLogs, scalaTest))
+  dependencies = Seq(query), libs = Seq(akkaActor, akkaHttpCore, akkaCirce, akkaSlf4j, logback, typeSafeLogs))
 lazy val graphs = module(name = "graphs", location = "service/graphs", libs = Seq(scalaTest))
 lazy val currency = service(name = "currency", location = "service/currency",
   dependencies = Seq(core, query), libs = Seq(scalaTest, akkaTest) ++ circeSuite)
-lazy val wizzair = service(name = "wizzair", location = "service/wizzair",
-  dependencies = Seq(core, query, graphs), libs = Seq(akkaTest, akkaHttpTest) ++
-    circeSuite)
+lazy val api = service(name = "api", location = "service/api",
+  dependencies = Seq(core, query, graphs), libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite)
