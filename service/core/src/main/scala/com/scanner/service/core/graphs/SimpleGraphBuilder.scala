@@ -1,4 +1,4 @@
-package com.scanner.graphs
+package com.scanner.service.core.graphs
 
 /**
   * Created by Iurii on 07-03-2017.

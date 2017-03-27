@@ -1,4 +1,4 @@
-package com.scanner.graphs
+package com.scanner.service.core.graphs
 
 import org.scalatest.{Matchers, WordSpec}
 

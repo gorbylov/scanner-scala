@@ -18,6 +18,6 @@ object BasicUnmarshallers {
   }
   implicit def toLocalDateTimeUnmarshaller = new FromStringUnmarshaller[LocalDateTime] {
     override def apply(value: String)(implicit ec: ExecutionContext, materializer: Materializer): Future[LocalDateTime] =
-      Future.successful(LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+      Future.successful(LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
   }
 }

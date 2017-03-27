@@ -8,4 +8,5 @@ import com.typesafe.config.ConfigFactory
 trait Config {
   val config = ConfigFactory.load()
   val serviceName = config.getString("scanner.module.name")
+  val akkaSystemName = config.getString("story.akka.name")
 }

@@ -1,5 +1,6 @@
-package com.scanner.graphs
+package com.scanner.service.core.graphs
 
+import com.scanner.service.core.graphs.SimpleGraphBuilder
 import org.scalatest.{Matchers, WordSpec}
 
 /**
