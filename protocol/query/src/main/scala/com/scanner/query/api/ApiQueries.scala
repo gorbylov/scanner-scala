@@ -15,9 +15,10 @@ case class GetOneWayFlightsQuery(
   arrival: String,
   start: LocalDate,
   end: LocalDate,
+  airlines: Seq[Airline],
   currency: String
 )
-case class GetOneWayFlightsResponse(flights: Seq[GetOneWayFlightsView])
+case class GetOneWayFlightsResponse(flights: Seq[GetOneWayFlightsView]) extends Response
 
 case class GetOneWayFlightsView(
   key: String,
@@ -39,5 +40,9 @@ case class Airport(
   city: City,
   utc: Double
 )
+
+sealed trait Airline
+case object Wizzair extends Airline
+
 case class Country(name: String, code: String)
 case class City(name: String, code: String)

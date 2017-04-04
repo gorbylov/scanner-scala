@@ -42,9 +42,10 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
 
     "update currency state by scheduler" in {
       val stateBeforeUpdate = actorRef.underlyingActor.state
-      Thread.sleep(interval * 1000)
+      Thread.sleep(interval * 2000)
       val stateAfterUpdate = actorRef.underlyingActor.state
       (stateBeforeUpdate eq stateAfterUpdate) shouldBe false
+      system.terminate()
     }
   }
 }

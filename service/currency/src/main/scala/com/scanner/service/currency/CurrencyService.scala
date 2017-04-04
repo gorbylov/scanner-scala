@@ -1,6 +1,6 @@
 package com.scanner.service.currency
 
-import akka.actor.{Actor, Scheduler}
+import akka.actor.{Actor, ActorLogging, Scheduler}
 import com.scanner.query.currency.{ConvertCurrencyQuery, ConvertCurrencyResponse, UpdateCurrencyStateQuery}
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,17 +16,14 @@ import scala.language.postfixOps
 /**
   * Created by Iurii on 06-03-2017.
   */
-class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Actor {
+class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Actor with ActorLogging {
 
   scheduler.schedule(interval, interval, self, UpdateCurrencyStateQuery)
 
-  val log = Logger(LoggerFactory.getLogger(getClass))
   var state: Map[String, BigDecimal] = fetchCurrencies()
 
   override def receive: Receive = {
-    case ConvertCurrencyQuery(from, to, value) => sender ! ConvertCurrencyResponse(
-      convert(from, to, value)
-    )
+    case ConvertCurrencyQuery(from, to, value) => sender ! ConvertCurrencyResponse(convert(from, to, value))
     case UpdateCurrencyStateQuery =>
       log.info("Updating currency state.")
       state = fetchCurrencies()

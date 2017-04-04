@@ -31,6 +31,8 @@ val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
 val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 val akkaCirce = "de.heikoseeberger" %% "akka-http-circe" % "1.12.0"
+//http
+val scalajHttp = "org.scalaj" %% "scalaj-http" % "2.3.0"
 //json
 val circeSuite = Seq(
   "io.circe" %% "circe-generic",
@@ -55,6 +57,8 @@ lazy val query = module(name = "query", location = "protocol/query")
 lazy val core = module(name = "service-core", location = "service/core",
   dependencies = Seq(query), libs = Seq(akkaActor, akkaHttp, akkaCirce, akkaSlf4j, logback, typeSafeLogs, scalaTest, akkaTest))
 lazy val currency = service(name = "currency", location = "service/currency",
-  dependencies = Seq(core, query), libs = circeSuite)
+  dependencies = Seq(core, query), libs = Seq(scalaTest, akkaTest) ++ circeSuite)
 lazy val api = service(name = "api", location = "service/api",
-  dependencies = Seq(core, query), libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite)
+  dependencies = Seq(core, query, wizzair), libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite)
+lazy val wizzair = service(name = "wizzair", location = "service/wizzair",
+  dependencies = Seq(core, query), libs = Seq(scalajHttp, scalaTest, akkaTest, akkaHttpTest) ++ circeSuite)

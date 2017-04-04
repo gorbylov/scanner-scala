@@ -2,7 +2,7 @@ package com.scanner.service.api.marshal
 
 import akka.http.scaladsl.unmarshalling.FromStringUnmarshaller
 import akka.stream.Materializer
-import com.scanner.service.api.{Airline, Wizzair}
+import com.scanner.query.api.{Airline, Wizzair}
 
 import scala.concurrent.{ExecutionContext, Future}
 
