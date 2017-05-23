@@ -1,11 +1,11 @@
-package com.scanner.service.wizzair
+package com.scanner.service.api.wizzair
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import akka.actor.Actor
 import com.scanner.query.api.GetOneWayFlightsQuery
-import com.scanner.service.wizzair.WizzairWorker.{API_URL, CONN_TIMEOUT, READ_TIMEOUT}
+import com.scanner.service.api.wizzair.WizzairWorker.{API_URL, CONN_TIMEOUT, READ_TIMEOUT}
 import io.circe.generic.auto._
 
 import scalaj.http.Http

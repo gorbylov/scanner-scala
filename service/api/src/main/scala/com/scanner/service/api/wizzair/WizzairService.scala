@@ -1,4 +1,4 @@
-package com.scanner.service.wizzair
+package com.scanner.service.api.wizzair
 
 import akka.actor.{Actor, Props}
 import com.scanner.query.api.GetOneWayFlightsQuery

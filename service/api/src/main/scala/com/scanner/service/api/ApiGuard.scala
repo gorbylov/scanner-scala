@@ -2,11 +2,11 @@ package com.scanner.service.api
 
 import akka.actor.{Actor, ActorRef, Props}
 import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, Wizzair}
-import com.scanner.service.wizzair.WizzairService
 
 import scala.concurrent.Future
 import akka.util.Timeout
 import akka.pattern.{ask, pipe}
+import com.scanner.service.api.wizzair.WizzairService
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
