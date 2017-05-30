@@ -21,9 +21,9 @@ case class GetOneWayFlightsQuery(
 case class GetOneWayFlightsResponse(flights: Seq[GetOneWayFlightsView]) extends Response
 
 case class GetOneWayFlightsView(
-  key: String,
-  origin: Airport,
-  arrival: Airport,
+  flightNumber: String,
+  origin: String,
+  arrival: String,
   departureTime: LocalDateTime,
   arrivalTime: LocalDateTime,
   airline: String,

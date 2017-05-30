@@ -13,11 +13,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by IGorbylov on 21.03.2017.
   */
-class ApiApp extends Api with ApiConfig{
+object ApiApp extends App with Api with ApiConfig{
 
   def log: Logger = Logger(LoggerFactory.getLogger(getClass))
 
-  implicit val system = ActorSystem(akkaSystemName)
+  implicit val system = ActorSystem("temp")
   implicit val materializer = ActorMaterializer()
   implicit val timeout = Timeout(10 seconds)
 
@@ -25,5 +25,7 @@ class ApiApp extends Api with ApiConfig{
     val apiGuard = system.actorOf(Props(classOf[ApiGuard]))
     Http().bindAndHandle(routes(apiGuard), httpInterface, httpPort)
   }
+
+  launch()
 
 }

@@ -1,50 +1,57 @@
 package com.scanner.service.api.wizzair
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
 import akka.actor.Actor
-import com.scanner.query.api.GetOneWayFlightsQuery
-import com.scanner.service.api.wizzair.WizzairWorker.{API_URL, CONN_TIMEOUT, READ_TIMEOUT}
+import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, GetOneWayFlightsView}
+
+import scala.io.Source
+import com.scanner.service.api.wizzair.WizzairWorker._
+import io.circe.parser._
 import io.circe.generic.auto._
-
-import scalaj.http.Http
-
 /**
   * Created by IGorbylov on 04.04.2017.
   */
 class WizzairWorker extends Actor {
 
   override def receive: Receive = {
-    case GetOneWayFlightsQuery(origin, arrival, start, end, _, currency) => sender ! flights(oneWayJson(origin, arrival, start, end))
-
+    case GetOneWayFlightsQuery(origin, arrival, start, end, _, currency) =>
+      //sender ! GetOneWayFlightsResponse(flights(origin, arrival, start, end))
+      flights(origin, arrival, start, end)
   }
 
-  private def flights(json: String) = {
-    val result = Http(API_URL).postData(json)
-      .header("Content-Type", "application/json")
-      .header("Charset", "UTF-8")
-      .timeout(CONN_TIMEOUT, READ_TIMEOUT)
-      .asString
+  def flights(origin: String, arrival: String, start: LocalDate, end: LocalDate) = {
+    val content = Source.fromURL(s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=2017&month=10")
+      .mkString
+    val result = parse(content)
+      .flatMap(_.as[List[WizzairTimetableResponse]])
+      .map(response =>
+        GetOneWayFlightsView("key", response.head.DepartureStationCode, response.head.ArrivalStationCode, LocalDateTime
+          .now(),
+          LocalDateTime.now(), "WIZZAIR", 11, "UAH")
+      ).getOrElse(null)
     println(result)
-  }
-
-  private def oneWayJson(origin: String, arrival: String, start: LocalDate, end: LocalDate) = {
-    s"""
-       |{
-       |  "flightList":[{
-       |    "departureStation":"$origin",
-       |    "arrivalStation":"$arrival",
-       |    "from": "${start.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}",
-       |    "to": "${end.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}"
-       |   }]
-       |}
-      """.stripMargin
   }
 }
 
+case class WizzairTimetableResponse(
+  ArrivalStationCode: String, //BUD
+  DepartureStationCode: String, //IEV
+  MinimumPrice: Option[String], // 2 090,00UAH
+  Flights: List[WizzairFlightInfoDto]
+)
+
+case class WizzairFlightInfoDto(
+  CarrierCode: String, //W6
+  FlightNumber: String, //6275
+  STA: String, // h:mm
+  STD: String  // h:mm
+)
+
 object WizzairWorker {
-  val API_URL = "https://be.wizzair.com/4.3.0/Api/search/timetable"
+  val API_ROOT = "https://cdn.static.wizzair.com"
+  val TIMETABLE_ROOT = s"$API_ROOT/en-GB/TimeTableAjax"
   val CONN_TIMEOUT = 10000
   val READ_TIMEOUT = 10000
 }
