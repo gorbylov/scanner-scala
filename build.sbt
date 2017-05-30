@@ -54,7 +54,7 @@ lazy val root = (project in file("."))
 //protocol
 lazy val query = module(name = "query", location = "protocol/query")
 //services
-lazy val core = module(name = "service-core", location = "service/core",
+lazy val core = module(name = "core", location = "service/core",
   dependencies = Seq(query), libs = Seq(akkaActor, akkaHttp, akkaCirce, akkaSlf4j, logback, typeSafeLogs, scalaTest, akkaTest))
 lazy val currency = service(name = "currency", location = "service/currency",
   dependencies = Seq(core, query), libs = Seq(scalaTest, akkaTest) ++ circeSuite)
