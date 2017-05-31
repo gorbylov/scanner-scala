@@ -1,15 +1,16 @@
 package com.scanner.service.api.wizzair
 
-import java.time.{LocalDate, LocalDateTime}
-import java.time.format.DateTimeFormatter
+import java.time.LocalDate
 
 import akka.actor.Actor
-import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, GetOneWayFlightsView}
+import com.scanner.query.api.GetOneWayFlightsQuery
+import com.scanner.service.api.wizzair.WizzairWorker._
+import com.scanner.service.core.utils.Dates._
+import io.circe.generic.auto._
+import io.circe.parser._
 
 import scala.io.Source
-import com.scanner.service.api.wizzair.WizzairWorker._
-import io.circe.parser._
-import io.circe.generic.auto._
+import scala.util.Try
 /**
   * Created by IGorbylov on 04.04.2017.
   */
@@ -21,32 +22,44 @@ class WizzairWorker extends Actor {
       flights(origin, arrival, start, end)
   }
 
-  def flights(origin: String, arrival: String, start: LocalDate, end: LocalDate) = {
-    val content = Source.fromURL(s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=2017&month=10")
-      .mkString
-    val result = parse(content)
-      .flatMap(_.as[List[WizzairTimetableResponse]])
-      .map(response =>
-        GetOneWayFlightsView("key", response.head.DepartureStationCode, response.head.ArrivalStationCode, LocalDateTime
-          .now(),
-          LocalDateTime.now(), "WIZZAIR", 11, "UAH")
-      ).getOrElse(null)
+  def flights(origin: String, arrival: String, from: LocalDate, to: LocalDate) = {
+    val result = for {
+      date <- (from -> to).toMonthsInterval()
+      content <- Try(Source.fromURL(s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}").mkString)
+      list <- parse(content).flatMap(_.as[List[WizzairTimetableResponse]]).toTry
+    } yield list
+    result.
+
+
+//    val result = (from -> to).toMonthsInterval()
+//      .flatMap(date =>
+//        Try(Source.fromURL(s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}").mkString)
+//          .flatMap(content => parse(content).flatMap(_.as[List[WizzairTimetableResponse]]).toTry)
+//          .fold(
+//            error =>
+//              //log here
+//              Nil,
+//            response => response
+//          )
+//      )
+//
+//
     println(result)
   }
 }
 
 case class WizzairTimetableResponse(
-  ArrivalStationCode: String, //BUD
-  DepartureStationCode: String, //IEV
-  MinimumPrice: Option[String], // 2 090,00UAH
+  ArrivalStationCode: String,         //BUD
+  DepartureStationCode: String,       //IEV
+  MinimumPrice: Option[String],       // 2 090,00UAH
   Flights: List[WizzairFlightInfoDto]
 )
 
 case class WizzairFlightInfoDto(
-  CarrierCode: String, //W6
-  FlightNumber: String, //6275
-  STA: String, // h:mm
-  STD: String  // h:mm
+  CarrierCode: String,    // W6
+  FlightNumber: String,   // 6275
+  STA: String,            // h:mm
+  STD: String             // h:mm
 )
 
 object WizzairWorker {
