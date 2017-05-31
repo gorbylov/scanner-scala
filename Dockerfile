@@ -21,8 +21,11 @@ RUN bash $SBT_HOME/bin/sbt
 VOLUME $APP_HOME
 WORKDIR $APP_HOME
 
+# The command which is needed to prevent container shutdown
+CMD tail -f /dev/null
+
 # To build an image:
 # docker build -t ${image_name} .
 #
 # To create and run a container
-# docker run --name ${container_name} -d -v ${host_path}:/opt/app ${image_name} tail -f /dev/null
+# docker run --name ${container_name} -d -v ${host_path}:/opt/app ${image_name}
