@@ -1,16 +1,18 @@
 package com.scanner.service.api.wizzair
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 import akka.actor.Actor
-import com.scanner.query.api.GetOneWayFlightsQuery
-import com.scanner.service.api.wizzair.WizzairWorker._
+import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, GetOneWayFlightsView}
 import com.scanner.service.core.utils.Dates._
 import io.circe.generic.auto._
 import io.circe.parser._
+import com.scanner.service.api.wizzair.WizzairWorker._
 
 import scala.io.Source
 import scala.util.Try
+import com.scanner.service.core.utils.SequenceUtils.TrySequence
+
 /**
   * Created by IGorbylov on 04.04.2017.
   */
@@ -18,33 +20,54 @@ class WizzairWorker extends Actor {
 
   override def receive: Receive = {
     case GetOneWayFlightsQuery(origin, arrival, start, end, _, currency) =>
-      //sender ! GetOneWayFlightsResponse(flights(origin, arrival, start, end))
-      flights(origin, arrival, start, end)
+      sender ! GetOneWayFlightsResponse(flights(origin, arrival, start, end))
   }
 
-  def flights(origin: String, arrival: String, from: LocalDate, to: LocalDate) = {
-    val result = for {
-      date <- (from -> to).toMonthsInterval()
-      content <- Try(Source.fromURL(s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}").mkString)
-      list <- parse(content).flatMap(_.as[List[WizzairTimetableResponse]]).toTry
-    } yield list
-    result.
-
-
-//    val result = (from -> to).toMonthsInterval()
-//      .flatMap(date =>
-//        Try(Source.fromURL(s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}").mkString)
-//          .flatMap(content => parse(content).flatMap(_.as[List[WizzairTimetableResponse]]).toTry)
-//          .fold(
-//            error =>
-//              //log here
-//              Nil,
-//            response => response
-//          )
-//      )
-//
-//
-    println(result)
+  def flights(origin: String, arrival: String, from: LocalDate, to: LocalDate): Seq[GetOneWayFlightsView] = {
+    def buildUrl: LocalDate => String = date =>
+      s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}"
+    def mapResponse2View: WizzairTimetableResponse => List[GetOneWayFlightsView] = {
+      case WizzairTimetableResponse(arr, dep, Some(price), flights) =>
+        for {
+          WizzairFlightInfoDto(carrierCode, flightNumber, depDate, arrDate) <- flights
+        } yield GetOneWayFlightsView(
+          s"$carrierCode $flightNumber",
+          dep,
+          arr,
+          LocalDateTime.now(), // TODO deserialize
+          LocalDateTime.now(), // TODO deserialize
+          "WIZZAIR",
+          BigDecimal(price.replaceAll("[^0-9.]", "")), // TODO convert currency
+          "UAH"
+        )
+    }
+    // getting json content and converting to plain object
+    val maybeResponses = (from -> to).toMonthsInterval()
+      .map(date => buildUrl(date))
+      .map { url =>
+        for {
+          content <- Try(Source.fromURL(url).mkString)
+          json <- parse(content).toTry
+          response <- json.as[List[WizzairTimetableResponse]].toTry
+        } yield response
+      }
+      .sequence()
+      // mapping responses to views
+      val views = maybeResponses.map{ lists =>
+        for {
+          list <- lists
+          response <- list if response.MinimumPrice.isDefined
+          view <- mapResponse2View(response)
+        } yield view
+      }
+      .recover {
+        case e =>
+          // log error
+          List()
+      }
+      .getOrElse(List())
+    
+    views
   }
 }
 
