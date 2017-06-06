@@ -28,6 +28,7 @@ def service(
 val akkaVersion = "2.4.17"
 val akkaHttpVersion = "10.0.4"
 val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
+val akkaCluster = "com.typesafe.akka" %% "akka-cluster" % akkaVersion
 val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 val akkaCirce = "de.heikoseeberger" %% "akka-http-circe" % "1.12.0"
@@ -51,6 +52,8 @@ lazy val root = (project in file("."))
   .aggregate(query, core, api, currency)
   .settings(name := """scanner-server""")
   .settings(baseSettings)
+//cluster-seed
+lazy val clusterSeed = service("cluster-seed", "cluster-seed", libs = Seq(akkaActor, akkaCluster))
 //protocol
 lazy val query = module(name = "query", location = "protocol/query")
 //services
