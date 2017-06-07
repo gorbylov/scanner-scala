@@ -1,22 +1,22 @@
-package com.scanner.service.api.wizzair
+package com.scanner.service.wizzair
 
 import java.time.{LocalDate, LocalDateTime}
 
 import akka.actor.Actor
 import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, GetOneWayFlightsView}
 import com.scanner.service.core.utils.Dates._
+import com.scanner.service.core.utils.SequenceUtils.TrySequence
 import io.circe.generic.auto._
 import io.circe.parser._
-import com.scanner.service.api.wizzair.WizzairWorker._
 
 import scala.io.Source
 import scala.util.Try
-import com.scanner.service.core.utils.SequenceUtils.TrySequence
 
 /**
   * Created by IGorbylov on 04.04.2017.
   */
 class WizzairWorker extends Actor {
+  import WizzairWorker._
 
   override def receive: Receive = {
     case GetOneWayFlightsQuery(origin, arrival, start, end, _, currency) =>
