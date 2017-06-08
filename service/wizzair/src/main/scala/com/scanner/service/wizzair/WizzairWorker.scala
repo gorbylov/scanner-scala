@@ -1,16 +1,17 @@
 package com.scanner.service.wizzair
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import akka.actor.Actor
 import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, GetOneWayFlightsView}
 import com.scanner.service.core.utils.Dates._
 import com.scanner.service.core.utils.SequenceUtils.TrySequence
-import io.circe.generic.auto._
-import io.circe.parser._
 
 import scala.io.Source
 import scala.util.Try
+import io.circe.generic.auto._
+import io.circe.parser._
+import com.scanner.service.wizzair.json.WizzairCodecs._
 
 /**
   * Created by IGorbylov on 04.04.2017.
@@ -27,15 +28,15 @@ class WizzairWorker extends Actor {
     def buildUrl: LocalDate => String = date =>
       s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}"
     def mapResponse2View: WizzairTimetableResponse => List[GetOneWayFlightsView] = {
-      case WizzairTimetableResponse(arr, dep, Some(price), flights) =>
+      case WizzairTimetableResponse(arr, dep, Some(price), date, flights) =>
         for {
-          WizzairFlightInfoDto(carrierCode, flightNumber, depDate, arrDate) <- flights
+          WizzairFlightInfoDto(carrierCode, flightNumber, depTime, arrTime) <- flights
         } yield GetOneWayFlightsView(
           s"$carrierCode $flightNumber",
           dep,
           arr,
-          LocalDateTime.now(), // TODO deserialize
-          LocalDateTime.now(), // TODO deserialize
+          LocalDateTime.of(date, depTime),
+          LocalDateTime.of(date, arrTime),
           "WIZZAIR",
           BigDecimal(price.replaceAll("[^0-9.]", "")), // TODO convert currency
           "UAH"
@@ -75,14 +76,15 @@ case class WizzairTimetableResponse(
   ArrivalStationCode: String,         //BUD
   DepartureStationCode: String,       //IEV
   MinimumPrice: Option[String],       // 2 090,00UAH
+  Date: LocalDate,                    // 20170626
   Flights: List[WizzairFlightInfoDto]
 )
 
 case class WizzairFlightInfoDto(
   CarrierCode: String,    // W6
   FlightNumber: String,   // 6275
-  STA: String,            // h:mm
-  STD: String             // h:mm
+  STA: LocalTime,            // hh:mm
+  STD: LocalTime             // hh:mm
 )
 
 object WizzairWorker {
