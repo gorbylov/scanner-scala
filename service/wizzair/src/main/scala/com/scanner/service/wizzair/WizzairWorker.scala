@@ -44,7 +44,8 @@ class WizzairWorker extends Actor {
           LocalDateTime.of(date, arrTime),
           "WIZZAIR",
           BigDecimal(price.replaceAll("[^0-9.]", "")), // TODO convert currency
-          "UAH"
+          "UAH" // TODO| find out wizzair price pattern, replace numbers, dots and commas (might be "[0-9.,]"),
+                // TODO| then map wizzair currency to iso
         )
     }
     // getting json content and converting to plain object
