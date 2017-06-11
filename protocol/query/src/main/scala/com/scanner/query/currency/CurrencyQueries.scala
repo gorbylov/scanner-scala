@@ -15,4 +15,7 @@ case class ConvertCurrencyQuery(
 ) extends CurrencyQuery
 case class ConvertCurrencyResponse(value: Option[BigDecimal]) extends CurrencyResponse
 
+case class GetCurrenciesCoefficientQuery(from: String, to: String) extends CurrencyQuery
+case class GetCurrenciesCoefficientResponse(coefficient: Option[BigDecimal]) extends CurrencyResponse
+
 case object UpdateCurrencyStateQuery extends Query

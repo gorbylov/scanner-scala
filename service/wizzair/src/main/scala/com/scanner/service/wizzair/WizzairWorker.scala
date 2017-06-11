@@ -19,6 +19,11 @@ import com.scanner.service.wizzair.json.WizzairCodecs._
 class WizzairWorker extends Actor {
   import WizzairWorker._
 
+  val wizzairCurrenciesToISO = Map(
+    "₪" -> "ILS", "€" -> "EUR", "£" -> "GBP", "kr" -> "NOK", "zł" -> "PLN", "Kč" -> "CZK", "Ft" -> "HUF",
+    "KM" -> "BAM", "MKD" -> "MKD", "din" -> "RSD", "lv" -> "BGN", "lei" -> "RON", "SFr" -> "CHF", "UAH" -> "UAH"
+  )
+
   override def receive: Receive = {
     case GetOneWayFlightsQuery(origin, arrival, start, end, _, currency) =>
       sender ! GetOneWayFlightsResponse(flights(origin, arrival, start, end))

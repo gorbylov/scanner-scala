@@ -1,16 +1,15 @@
 package com.scanner.service.api
 
-import akka.actor.{ActorRef, ActorSelection, ActorSystem, Props}
+import akka.actor.{ActorSelection, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 /**
   * Created by IGorbylov on 21.03.2017.

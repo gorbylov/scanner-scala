@@ -8,6 +8,6 @@ import com.typesafe.config.ConfigFactory
 trait CurrencyConfig {
   val currencyConfig = ConfigFactory.load()
   val systemName = currencyConfig.getString("scanner.system.name")
-  val serviceName = currencyConfig.getString("scanner.system.name")
+  val serviceName = currencyConfig.getString("scanner.service.name")
   val schedulerInterval = currencyConfig.getInt("scanner.scheduler.interval")
 }

@@ -21,6 +21,7 @@ object CurrencyApp extends App with CurrencyConfig {
       classOf[CurrencyService],
       system.scheduler,
       schedulerInterval hours
-    )
+    ),
+    serviceName
   )
 }

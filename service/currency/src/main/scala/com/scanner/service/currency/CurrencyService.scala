@@ -1,9 +1,7 @@
 package com.scanner.service.currency
 
 import akka.actor.{Actor, ActorLogging, Scheduler}
-import com.scanner.query.currency.{ConvertCurrencyQuery, ConvertCurrencyResponse, UpdateCurrencyStateQuery}
-import com.typesafe.scalalogging.slf4j.Logger
-import org.slf4j.LoggerFactory
+import com.scanner.query.currency._
 import io.circe.generic.auto._
 import io.circe.parser._
 
@@ -23,7 +21,12 @@ class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Ac
   var state: Map[String, BigDecimal] = fetchCurrencies()
 
   override def receive: Receive = {
-    case ConvertCurrencyQuery(from, to, value) => sender ! ConvertCurrencyResponse(convert(from, to, value))
+    case GetCurrenciesCoefficientQuery(from, to) =>
+      log.info(s"Got request to get coefficient from $from to $to")
+      sender ! GetCurrenciesCoefficientResponse(convert(from, to, 1))
+    case ConvertCurrencyQuery(from, to, value) =>
+      log.info(s"Got request to convert currency from $from to $to")
+      sender ! ConvertCurrencyResponse(convert(from, to, value))
     case UpdateCurrencyStateQuery =>
       log.info("Updating currency state.")
       state = fetchCurrencies()
@@ -47,7 +50,7 @@ class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Ac
       )
       .fold(
         error => {
-          log.error(s"Error occurred while fetching currencies state: $error")
+          log.error(s"An error occurred while fetching currencies state: $error")
           Map[String, BigDecimal]()
         },
         state => state.quotes.map{case (key, value) => key.substring(3) -> value}
@@ -59,6 +62,4 @@ object CurrencyService {
   val API_URL = "http://www.apilayer.net/api/live?access_key=304ab1caae3a0cff5303cab9619d6140&format=1"
 }
 
-case class CurrencyResponse(
-  quotes: Map[String, BigDecimal]
-)
+case class CurrencyResponse(quotes: Map[String, BigDecimal])
