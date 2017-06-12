@@ -2,9 +2,8 @@ package com.scanner.service.wizzair
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 
-import akka.actor.Actor
-import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, GetOneWayFlightsView}
-import com.scanner.service.core.utils.Dates._
+import akka.actor.{Actor, ActorLogging}
+import com.scanner.query.wizzair._
 import com.scanner.service.core.utils.SequenceUtils.TrySequence
 
 import scala.io.Source
@@ -12,69 +11,65 @@ import scala.util.Try
 import io.circe.generic.auto._
 import io.circe.parser._
 import com.scanner.service.wizzair.json.WizzairCodecs._
+import com.scanner.service.core.utils.Exceptions._
 
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class WizzairWorker extends Actor {
+class WizzairWorker extends Actor with ActorLogging {
   import WizzairWorker._
 
   val wizzairCurrenciesToISO = Map(
-    "₪" -> "ILS", "€" -> "EUR", "£" -> "GBP", "kr" -> "NOK", "zł" -> "PLN", "Kč" -> "CZK", "Ft" -> "HUF",
-    "KM" -> "BAM", "MKD" -> "MKD", "din" -> "RSD", "lv" -> "BGN", "lei" -> "RON", "SFr" -> "CHF", "UAH" -> "UAH"
+    "₪" -> "ILS", "€" -> "EUR", "£" -> "GBP", "kr" -> "NOK", "zł" -> "PLN", "Kč" -> "CZK",
+    "Ft" -> "HUF", "KM" -> "BAM", "MKD" -> "MKD", "din" -> "RSD", "lv" -> "BGN", "lei" -> "RON",
+    "SFr" -> "CHF", "UAH" -> "UAH"
   )
 
   override def receive: Receive = {
-    case GetOneWayFlightsQuery(origin, arrival, start, end, _, currency) =>
-      sender ! GetOneWayFlightsResponse(flights(origin, arrival, start, end))
+    case GetWizzairFlightsQuery(origin, arrival, year, month) =>
+      val response = flights(origin, arrival, year, month).fold[WizzairResponse](
+        error => {
+          log.error(s"An error occurred while processing wizzair flights\n${error.mkString()}")
+          WizzairFailure(error, "message")
+        },
+        flights => GetWizzairFlightsResponse(flights)
+      )
+      sender ! response
   }
 
-  def flights(origin: String, arrival: String, from: LocalDate, to: LocalDate): Seq[GetOneWayFlightsView] = {
-    def buildUrl: LocalDate => String = date =>
-      s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=${date.getYear}&month=${date.getMonth.getValue}"
-    def mapResponse2View: WizzairTimetableResponse => List[GetOneWayFlightsView] = {
-      case WizzairTimetableResponse(arr, dep, Some(price), date, flights) =>
-        for {
-          WizzairFlightInfoDto(carrierCode, flightNumber, depTime, arrTime) <- flights
-        } yield GetOneWayFlightsView(
-          s"$carrierCode $flightNumber",
-          dep,
-          arr,
-          LocalDateTime.of(date, depTime),
-          LocalDateTime.of(date, arrTime),
-          "WIZZAIR",
-          BigDecimal(price.replaceAll("[^0-9.]", "")), // TODO convert currency
-          "UAH" // TODO| find out wizzair price pattern, replace numbers, dots and commas (might be "[0-9.,]"),
-                // TODO| then map wizzair currency to iso
-        )
-    }
+  def flights(origin: String, arrival: String, year: Int, month: Int): Try[List[WizzairFlightView]] = {
+    val url = s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=$year&month=$month"
     // getting json content and converting to plain object
-    val maybeResponses = (from -> to).toMonthsInterval()
-      .map(date => buildUrl(date))
-      .map { url =>
-        for {
-          content <- Try(Source.fromURL(url).mkString)
-          json <- parse(content).toTry
-          response <- json.as[List[WizzairTimetableResponse]].toTry
-        } yield response
-      }
-      .sequence()
-      // mapping responses to views
-      val views = maybeResponses.map{ lists =>
-        for {
-          list <- lists
-          response <- list if response.MinimumPrice.isDefined
-          view <- mapResponse2View(response)
-        } yield view
-      }
-      .recover {
-        case e =>
-          // log error
-          List()
-      }
-      .getOrElse(List())
-    
-    views
+    val maybeResponses = for {
+      content <- Try(Source.fromURL(url, "UTF-8").mkString) // TODO Future
+      json <- parse(content).toTry
+      response <- json.as[List[WizzairTimetableResponse]].toTry
+    } yield response
+    // mapping responses to views
+    maybeResponses.map { responses =>
+      responses
+        .filter(_.MinimumPrice.isDefined) // TODO filters here doesn't look as a good idea
+        .filter{ response =>
+          val result = wizzairCurrenciesToISO.contains(response.MinimumPrice.get.replaceAll("[0-9.,]", "").trim)
+          if (!result) log.error(s"Unknown currency ${response.MinimumPrice.get}")
+          result
+        }
+        .map { response =>
+          response.Flights.map {
+            case WizzairFlightInfoDto(carrierCode, flightNumber, depTime, arrTime) =>
+              WizzairFlightView(
+                s"$carrierCode $flightNumber",
+                response.DepartureStationCode,
+                response.ArrivalStationCode,
+                LocalDateTime.of(response.Date, depTime),
+                LocalDateTime.of(response.Date, arrTime),
+                BigDecimal(response.MinimumPrice.get.replaceAll("[^0-9.]", "")),
+                wizzairCurrenciesToISO(response.MinimumPrice.get.replaceAll("[0-9.,]", "").trim)
+              )
+          }
+        }
+    }
+      .map(_.flatten)
   }
 }
 
@@ -89,8 +84,8 @@ case class WizzairTimetableResponse(
 case class WizzairFlightInfoDto(
   CarrierCode: String,    // W6
   FlightNumber: String,   // 6275
-  STA: LocalTime,            // hh:mm
-  STD: LocalTime             // hh:mm
+  STA: LocalTime,         // hh:mm
+  STD: LocalTime          // hh:mm
 )
 
 object WizzairWorker {

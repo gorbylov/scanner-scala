@@ -18,7 +18,7 @@ case class GetOneWayFlightsQuery(
   airlines: Seq[Airline],
   currency: String
 )
-case class GetOneWayFlightsResponse(flights: Seq[GetOneWayFlightsView]) extends Response
+case class GetOneWayFlightsResponse(flights: List[GetOneWayFlightsView]) extends Response
 
 case class GetOneWayFlightsView(
   flightNumber: String,

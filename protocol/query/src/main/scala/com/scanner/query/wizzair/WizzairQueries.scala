@@ -1,7 +1,6 @@
 package com.scanner.query.wizzair
 
-import java.time.{LocalDate, LocalDateTime}
-
+import java.time.LocalDateTime
 import com.scanner.query.core.{Query, Response}
 
 /**
@@ -10,15 +9,17 @@ import com.scanner.query.core.{Query, Response}
 sealed trait WizzairQuery extends Query
 sealed trait WizzairResponse extends Response
 
+case class WizzairFailure(error: Throwable, message: String) extends WizzairResponse
+
 case class GetWizzairFlightsQuery(
   origin: String,
   arrival: String,
-  from: LocalDate,
-  to: LocalDate
+  year: Int,
+  month: Int
 ) extends WizzairQuery
 case class GetWizzairFlightsResponse(
   flights: List[WizzairFlightView]
-)
+) extends WizzairResponse
 
 case class WizzairFlightView(
   flightNumber: String,

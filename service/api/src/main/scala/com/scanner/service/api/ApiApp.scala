@@ -22,18 +22,14 @@ object ApiApp extends App with Api with ApiConfig{
   implicit val materializer = ActorMaterializer()
   implicit val timeout = Timeout(10 seconds)
 
-  locateActor(wizzairConfig.getString("host"), wizzairConfig.getString("port"), wizzairConfig.getString("name"))
-    .resolveOne()
-    .onComplete{
-      case Success(wizzairService) =>
-        val apiGuard = system.actorOf(
-          Props(classOf[ApiGuard], wizzairService),
-          "apiGuard"
-        )
-        Http().bindAndHandle(routes(apiGuard), httpInterface, httpPort)
-      case Failure(error) =>
-        log.error(s"${error.getMessage}\nWizzairService is unreachable.")
-    }
+  val wizzairService =
+    locateActor(wizzairConfig.getString("host"), wizzairConfig.getString("port"), wizzairConfig.getString("name"))
+
+  val apiGuard = system.actorOf(
+    Props(classOf[ApiGuard], wizzairService),
+    "apiGuard"
+  )
+  Http().bindAndHandle(routes(apiGuard), httpInterface, httpPort)
 
   def locateActor(host: String, port: String, name: String): ActorSelection =
     system.actorSelection(s"akka.tcp://scanner@$host:$port/user/$name")

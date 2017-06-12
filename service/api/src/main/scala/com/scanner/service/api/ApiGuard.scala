@@ -1,6 +1,6 @@
 package com.scanner.service.api
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorSelection}
 import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, Wizzair}
 import akka.util.Timeout
 import akka.pattern.{ask, pipe}
@@ -12,7 +12,7 @@ import com.scanner.service.core.utils.SequenceUtils.FutureSequence
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class ApiGuard(wizzairService: ActorRef) extends Actor {
+class ApiGuard(wizzairService: ActorSelection) extends Actor {
 
   implicit val askTimeout = Timeout(10 seconds)
 
