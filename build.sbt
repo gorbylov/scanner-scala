@@ -84,11 +84,11 @@ lazy val api = service(
   name = "api",
   location = "service/api",
   dependencies = Seq(core, query),
-  libs = Seq(scalajHttp, scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
+  libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
 )
 lazy val wizzair = service(
   name = "wizzair",
   location = "service/wizzair",
   dependencies = Seq(core, query),
-  libs = Seq(scalajHttp, scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
+  libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
 )

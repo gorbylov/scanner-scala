@@ -7,18 +7,23 @@ import com.scanner.query.core.{Query, Response}
 /**
   * Created by IGorbylov on 09.03.2017.
   */
-sealed trait ApiQueries extends Query
+sealed trait ApiQuery extends Query
 sealed trait ApiResponse extends Response
 
-case class GetOneWayFlightsQuery(
+case class GetOneWayFlightsRequest(
   origin: String,
   arrival: String,
   start: LocalDate,
   end: LocalDate,
   airlines: Seq[Airline],
   currency: String
-)
-case class GetOneWayFlightsResponse(flights: List[GetOneWayFlightsView]) extends Response
+) extends ApiQuery
+case class GetOneWayFlightsResponse(
+  flights: List[GetOneWayFlightsView]
+) extends ApiResponse
+
+case object GetConnectionsQuery extends ApiQuery
+case class GetConnectionsResponse(connections: Map[String, List[String]]) extends ApiResponse
 
 case class GetOneWayFlightsView(
   flightNumber: String,
@@ -26,7 +31,7 @@ case class GetOneWayFlightsView(
   arrival: String,
   departureTime: LocalDateTime,
   arrivalTime: LocalDateTime,
-  airline: String,
+  airline: String, // TODO use Airline trait
   price: BigDecimal,
   currency: String
 )
@@ -35,10 +40,10 @@ case class Airport(
   name: String,
   code: String,
   lat: Double,
-  lng: Double,
-  country: Country,
-  city: City,
-  utc: Double
+  lng: Double
+//  country: Country,
+//  city: City,
+//  utc: Double
 )
 
 sealed trait Airline

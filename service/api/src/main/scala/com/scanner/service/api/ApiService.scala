@@ -1,7 +1,7 @@
 package com.scanner.service.api
 
 import akka.actor.{Actor, ActorSelection}
-import com.scanner.query.api.{GetOneWayFlightsQuery, GetOneWayFlightsResponse, Wizzair}
+import com.scanner.query.api.{GetOneWayFlightsRequest, GetOneWayFlightsResponse, Wizzair}
 import akka.util.Timeout
 import akka.pattern.{ask, pipe}
 
@@ -12,12 +12,12 @@ import com.scanner.service.core.utils.SequenceUtils.FutureSequence
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class ApiGuard(wizzairService: ActorSelection) extends Actor {
+class ApiService(wizzairService: ActorSelection) extends Actor {
 
   implicit val askTimeout = Timeout(10 seconds)
 
   override def receive: Receive = {
-    case oneWayQuery: GetOneWayFlightsQuery =>
+    case oneWayQuery: GetOneWayFlightsRequest =>
       val currentSender = sender()
       oneWayQuery.airlines.map{
         case Wizzair => (wizzairService ? oneWayQuery)

@@ -28,7 +28,7 @@ class ApiSpec extends WordSpec with Matchers with ScalatestRouteTest with Api {
 
       val now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
       val nowPlusMonth = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-      Get(s"/scan?origin=ORG&arrival=ARV&start=$now&end=$nowPlusMonth&airline=wizzair&currency=UAH") ~> routes(testApiGuard) ~> check {
+      Get(s"/scan?origin=ORG&arrival=ARV&start=$now&end=$nowPlusMonth&airline=wizzair&currency=UAH") ~> routes(testApiService) ~> check {
         status shouldBe StatusCodes.OK
       }
 
@@ -36,9 +36,9 @@ class ApiSpec extends WordSpec with Matchers with ScalatestRouteTest with Api {
     }
   }
 
-  val testApiGuard = TestActorRef(new Actor() {
+  val testApiService = TestActorRef(new Actor() {
     override def receive: Receive = {
-      case oneWay: GetOneWayFlightsQuery => sender ! GetOneWayFlightsResponse(Seq.empty)
+      case oneWay: GetOneWayFlightsRequest => sender ! GetOneWayFlightsResponse(Seq.empty)
     }
   })
 

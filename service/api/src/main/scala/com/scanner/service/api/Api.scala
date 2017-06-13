@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.StatusCodes.InternalServerError
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.util.Timeout
-import com.scanner.query.api.{Airline, GetOneWayFlightsQuery, GetOneWayFlightsResponse}
+import com.scanner.query.api.{Airline, GetOneWayFlightsRequest, GetOneWayFlightsResponse}
 import com.scanner.query.core.Response
 
 import scala.concurrent.Future
@@ -29,12 +29,12 @@ trait Api extends CirceSupport {
 
   implicit val askTimeout = Timeout(10 seconds)
 
-  def routes(apiGuard: ActorRef): Route = encodeResponse {
+  def routes(apiService: ActorRef): Route = encodeResponse {
     path("scan") {
       parameters('origin, 'arrival, 'start.as[LocalDate], 'end.as[LocalDate], 'airline.as[Airline].*, 'currency) { (origin, arrival, start, end, airlines, currency) =>
         withRequestTimeout(10 seconds, request => HttpResponse(StatusCodes.EnhanceYourCalm, entity = "Request timeout")) {
           validate(checkParams(origin, arrival, start, end, currency), "Bad request parameters") {
-            completeQuery(apiGuard ? GetOneWayFlightsQuery(origin, arrival, start, end, airlines.toSeq, currency)) {
+            completeQuery(apiService ? GetOneWayFlightsRequest(origin, arrival, start, end, airlines.toSeq, currency)) {
               case GetOneWayFlightsResponse(flights) => complete(flights)
             }
           }

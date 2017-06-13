@@ -25,11 +25,11 @@ object ApiApp extends App with Api with ApiConfig{
   val wizzairService =
     locateActor(wizzairConfig.getString("host"), wizzairConfig.getString("port"), wizzairConfig.getString("name"))
 
-  val apiGuard = system.actorOf(
-    Props(classOf[ApiGuard], wizzairService),
-    "apiGuard"
+  val apiService = system.actorOf(
+    Props(classOf[ApiService], wizzairService),
+    "apiService"
   )
-  Http().bindAndHandle(routes(apiGuard), httpInterface, httpPort)
+  Http().bindAndHandle(routes(apiService), httpInterface, httpPort)
 
   def locateActor(host: String, port: String, name: String): ActorSelection =
     system.actorSelection(s"akka.tcp://scanner@$host:$port/user/$name")
