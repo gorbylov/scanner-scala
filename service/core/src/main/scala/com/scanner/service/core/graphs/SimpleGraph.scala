@@ -25,6 +25,8 @@ class SimpleGraph[V](graph: Map[V, List[List[V]]]) extends Graph[V] {
 
   override def getConnections(vertex: V): Option[List[Conn]] = graph.get(vertex)
 
+  override def isEmpty(): Boolean = graph.isEmpty
+
   override def toString: String = graph.toString
 }
 

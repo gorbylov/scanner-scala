@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 /**
   * Created by Iurii on 13-06-2017.
   */
-class WizzairServiceTest extends TestKit(ActorSystem("testSystem"))
+class WizzairServiceSpec extends TestKit(ActorSystem("testSystem"))
                                  with ImplicitSender
                                  with WordSpecLike
                                  with Matchers
@@ -21,7 +21,7 @@ class WizzairServiceTest extends TestKit(ActorSystem("testSystem"))
 
   val wizzairService = TestActorRef[WizzairService]
 
-  "WizzairWorker" should  {
+  "WizzairService" should  {
     "return all connections" in {
       wizzairService ! GetConnectionsQuery
       expectMsgPF(20 seconds) {

@@ -14,4 +14,10 @@ trait GraphBuilder[V] extends Graphs[V] {
 trait Graph[V] extends Graphs[V] {
   def search(from: V, to: V, edgeWeightResolver: ((V, V)) => BigDecimal) : List[Conn]
   def getConnections(vertex: V): Option[List[Conn]]
+  def isEmpty(): Boolean
+}
+
+object Graph {
+  def build[V](relations: List[(V, V)]): Graph[V] = SimpleGraphBuilder().build(relations)
+  def empty[V]: Graph[V] = SimpleGraph(Map.empty)
 }
