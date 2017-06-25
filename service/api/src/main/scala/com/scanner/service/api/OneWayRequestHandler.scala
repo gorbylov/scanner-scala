@@ -15,10 +15,10 @@ class OneWayRequestHandler(
 ) extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case oneWayQuery: GetOneWayFlightsRequest =>
-      airlineServices
-        .map {
-          case (Wizzair, wizzairService) => (wizzairService ? oneWayQuery)
-        }
+    case oneWayQuery: GetOneWayFlightsRequest => ???
+//      airlineServices
+//        .map {
+//          case (Wizzair, wizzairService) => (wizzairService ? oneWayQuery)
+//        }
   }
 }
