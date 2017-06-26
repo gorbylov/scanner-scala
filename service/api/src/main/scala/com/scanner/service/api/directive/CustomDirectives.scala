@@ -10,6 +10,7 @@ import com.scanner.query.api.Airline
 import scala.concurrent.Promise
 import com.scanner.service.core.json.BasicCodecs._
 import akka.http.scaladsl.server.Directives._
+import com.scanner.service.api.Api.RequestParams
 import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
@@ -19,8 +20,12 @@ import com.scanner.service.api.marshal.ApiUnmarshallers._
   */
 object CustomDirectives {
 
-  def oneWayRequest: Directive[(String, String, LocalDate, LocalDate, Iterable[Airline], String)] = {
+  def requestParams: Directive[Tuple1[RequestParams]] = {
     parameters('origin, 'arrival, 'start.as[LocalDate], 'end.as[LocalDate], 'airline.as[Airline].*, 'currency)
+      .tmap{
+      case (origin, arrival, start, end, airlines, currency) =>
+        RequestParams(origin, arrival, start, end, airlines.toList, currency)
+    }
   }
 
   // an imperative wrapper for request context
