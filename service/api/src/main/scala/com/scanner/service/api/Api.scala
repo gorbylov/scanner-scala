@@ -67,6 +67,10 @@ object Api {
     context: ImperativeRequestContext,
     params: RequestParams
   )
+  case class FailureMessage(
+    status: Int,
+    message: String
+  )
   case class RequestParams (
    origin: String,
    arrival: String,
