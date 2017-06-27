@@ -1,16 +1,15 @@
-package com.scanner.service.api.directive
+package com.scanner.service.api.http
 
 import java.time.LocalDate
 
-import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Directives.parameters
 import akka.http.scaladsl.server._
 import com.scanner.query.api.Airline
 
 import scala.concurrent.Promise
-import com.scanner.service.core.json.BasicCodecs._
 import akka.http.scaladsl.server.Directives._
 import com.scanner.service.api.Api.RequestParams
+
 import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
@@ -21,20 +20,14 @@ import com.scanner.service.api.marshal.ApiUnmarshallers._
 object CustomDirectives {
 
   def requestParams: Directive[Tuple1[RequestParams]] = {
-    parameters('origin, 'arrival, 'start.as[LocalDate], 'end.as[LocalDate], 'airline.as[Airline].*, 'currency)
-      .tmap{
-      case (origin, arrival, start, end, airlines, currency) =>
-        RequestParams(origin, arrival, start, end, airlines.toList, currency)
-    }
+    parameters('origin, 'arrival, 'from.as[LocalDate], 'to.as[LocalDate], 'airline.as[Airline].*, 'currency)
+      .tmap {
+        case (origin, arrival, from, to, airlines, currency) =>
+          RequestParams(origin, arrival, from, to, airlines.toList, currency)
+      }
   }
 
-  // an imperative wrapper for request context
-  final class ImperativeRequestContext(ctx: RequestContext, promise: Promise[RouteResult]) {
-    private implicit val ec = ctx.executionContext
-    def complete(obj: ToResponseMarshallable): Unit = ctx.complete(obj).onComplete(promise.complete)
-    def fail(error: Throwable): Unit = ctx.fail(error).onComplete(promise.complete)
-  }
-  // a custom directive
+
   def tell(inner: ImperativeRequestContext => Unit): Route = { ctx: RequestContext =>
     val p = Promise[RouteResult]()
     inner(new ImperativeRequestContext(ctx, p))
