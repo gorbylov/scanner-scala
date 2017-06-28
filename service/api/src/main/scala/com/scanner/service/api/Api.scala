@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import com.scanner.service.api.http.CustomDirectives.{requestParams, tell, validate}
+import com.scanner.service.api.http.CustomDirectives.{requestParams, tell, validate, requestTimeout}
 import com.scanner.query.api.Airline
 import com.scanner.service.api.Api.OneWayRequest
 import com.scanner.service.api.http.ImperativeRequestContext
@@ -32,7 +32,7 @@ trait Api extends CirceSupport {
       get {
         requestParams { params =>
           validate(params) {
-            withRequestTimeout(10 seconds, _ => HttpResponse(StatusCodes.RequestTimeout, entity = "Request timeout")) {
+            requestTimeout(10 seconds) {
               tell { ctx =>
                 apiService ! OneWayRequest(ctx, params)
               }
@@ -52,14 +52,6 @@ trait Api extends CirceSupport {
     currency.length == 3
   }
 
-  /*def completeQuery(response: Future[Any])(happyPath: PartialFunction[Response, Route]): Route = {
-    onComplete(response.mapTo[Response]){ tryResult =>
-      tryResult.fold(
-        _ => complete(InternalServerError),
-        resp => happyPath(resp)
-      )
-    }
-  }*/
 }
 
 object Api {

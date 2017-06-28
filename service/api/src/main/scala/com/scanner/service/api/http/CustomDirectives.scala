@@ -1,19 +1,24 @@
 package com.scanner.service.api.http
 
 import java.time.LocalDate
+import java.util.concurrent.TimeUnit
 
-import akka.http.scaladsl.marshalling.{ToEntityMarshaller, ToResponseMarshallable, ToResponseMarshaller}
-import akka.http.scaladsl.model.{StatusCode, StatusCodes}
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.parameters
 import akka.http.scaladsl.server._
 import com.scanner.query.api.Airline
 
-import scala.concurrent.Promise
+import scala.concurrent.{Await, Promise}
 import akka.http.scaladsl.server.Directives._
 import com.scanner.service.api.Api.{FailureMessage, RequestParams}
+
 import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
+import com.scanner.service.api.marshal.ApiMarshallers.failureMessageMarshaller
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 /**
   * Created by Iurii on 22-06-2017.
@@ -36,7 +41,7 @@ object CustomDirectives {
   }
 
   def validate(requestParams: RequestParams): Directive[Unit] = {
-    import com.scanner.service.api.marshal.ApiMarshallers.failureMessageMarshaller
+
     Directive { inner =>
       var errorMessages = List[String]()
       if (requestParams.origin.length != 3) {
@@ -64,20 +69,14 @@ object CustomDirectives {
     }
   }
 
- /* def validate(params: Seq[(Any, Any => Option[String])]): Directive[Unit] = {
-    val maybeError = params
-      .map{case (value, predicate) => predicate(value)}
-      .foldLeft[Option[String]](None){
-        case (None, Some(error)) => Some(error)
-        case (Some(msg1), Some(msg2)) => Some(s"$msg1\n$msg2")
-        case (Some(error), None) => Some(error)
-        case (None, None) => None
-      }
-    Directive { inner =>
-      maybeError match {
-        case Some(msg) => reject(ValidationRejection(msg))
-        case None => inner(())
-      }
+  def requestTimeout(duration: Duration): Directive[Unit] = {
+    val handler: HttpRequest => HttpResponse = { _ =>
+      HttpResponse(
+        status = StatusCodes.RequestTimeout,
+        entity = Await.result(Marshal(FailureMessage(408, "Request timeout")).to[MessageEntity], 2 seconds)
+      )
     }
-  }*/
+
+    withRequestTimeout(duration, handler)
+  }
 }

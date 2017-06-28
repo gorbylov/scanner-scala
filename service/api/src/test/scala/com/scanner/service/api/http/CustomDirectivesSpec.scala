@@ -3,21 +3,23 @@ package com.scanner.service.api.http
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-import akka.actor.Actor
+import akka.actor.{Actor}
 import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.testkit.{ScalatestRouteTest}
 import akka.testkit.TestActorRef
 import com.scanner.query.api.Wizzair
 import com.scanner.service.api.Api.{FailureMessage, RequestParams}
-import com.scanner.service.api.http.CustomDirectives.{requestParams, tell, validate}
+import com.scanner.service.api.http.CustomDirectives.{requestParams, requestTimeout, tell, validate}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import org.scalatest.{Matchers, WordSpec}
-
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import com.scanner.service.core.json.BasicCodecs._
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
   * Created by Iurii on 25-06-2017.
@@ -34,7 +36,6 @@ class CustomDirectivesSpec extends WordSpec
     "tell a message to an actor and complete the request" in {
 
       val expectedResponse = "completed"
-
       val testActor = TestActorRef(new Actor() {
         override def receive: Receive = {
           case ctx: ImperativeRequestContext => ctx.complete(expectedResponse)
@@ -127,7 +128,41 @@ class CustomDirectivesSpec extends WordSpec
         status shouldBe OK
         responseAs[String] shouldBe successMessage
       }
+    }
 
+    "fail request if timeout is passed" in {
+
+      val successMessage = "success"
+
+      val testRoute =  pathPrefix("test") {
+        path("success") {
+          get {
+            requestTimeout(1 second) {
+              complete(successMessage)
+            }
+          }
+        } ~ path("failure") {
+          get {
+            requestTimeout(1 second) {
+              val slowFuture = Future {
+                Thread.sleep(2000)
+                successMessage
+              }
+              complete(slowFuture)
+            }
+          }
+        }
+      }
+
+
+      Get("/test/success") ~> testRoute ~> check {
+        val resp = response
+        responseAs[String] shouldBe successMessage
+      }
+
+      Get("/test/failure") ~> testRoute ~> check {
+        // TODO find out how to test request timeout
+      }
     }
   }
 }
