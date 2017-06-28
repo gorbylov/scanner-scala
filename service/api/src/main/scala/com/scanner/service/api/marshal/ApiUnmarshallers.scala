@@ -11,9 +11,9 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object ApiUnmarshallers {
 
-  implicit def toAirlineTimeUnmarshaller = new FromStringUnmarshaller[Airline] {
+  implicit def airlineUnmarshaller = new FromStringUnmarshaller[Airline] {
     override def apply(value: String)(implicit ec: ExecutionContext, materializer: Materializer): Future[Airline] =
-      Future.successful(value.toLowerCase match {
+      Future(value.toLowerCase match {
         case "wizzair" => Wizzair
       })
   }

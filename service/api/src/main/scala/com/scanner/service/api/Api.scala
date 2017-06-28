@@ -7,15 +7,15 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import com.scanner.service.api.http.CustomDirectives.{requestParams, tell}
+import com.scanner.service.api.http.CustomDirectives.{requestParams, tell, validate}
+import com.scanner.query.api.Airline
+import com.scanner.service.api.Api.OneWayRequest
+import com.scanner.service.api.http.ImperativeRequestContext
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.scanner.service.core.json.BasicCodecs._
 import akka.http.scaladsl.server.Directives._
-import com.scanner.query.api.Airline
-import com.scanner.service.api.Api.OneWayRequest
-import com.scanner.service.api.http.ImperativeRequestContext
 import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
@@ -31,7 +31,7 @@ trait Api extends CirceSupport {
     path("scan") {
       get {
         requestParams { params =>
-          validate(checkParams(params.origin, params.arrival, params.from, params.to, params.currency), "Validation" + " error" + ".") {
+          validate(params) {
             withRequestTimeout(10 seconds, _ => HttpResponse(StatusCodes.RequestTimeout, entity = "Request timeout")) {
               tell { ctx =>
                 apiService ! OneWayRequest(ctx, params)

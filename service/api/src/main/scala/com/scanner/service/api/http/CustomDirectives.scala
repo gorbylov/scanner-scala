@@ -2,7 +2,7 @@ package com.scanner.service.api.http
 
 import java.time.LocalDate
 
-import akka.http.scaladsl.marshalling.{ToResponseMarshallable, ToResponseMarshaller}
+import akka.http.scaladsl.marshalling.{ToEntityMarshaller, ToResponseMarshallable, ToResponseMarshaller}
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives.parameters
 import akka.http.scaladsl.server._
@@ -35,9 +35,10 @@ object CustomDirectives {
     p.future
   }
 
-  def validate(requestParams: RequestParams)(implicit m: ToResponseMarshaller[(StatusCode, FailureMessage)]): Directive[Unit] = {
-    var errorMessages = List[String]()
+  def validate(requestParams: RequestParams): Directive[Unit] = {
+    import com.scanner.service.api.marshal.ApiMarshallers.failureMessageMarshaller
     Directive { inner =>
+      var errorMessages = List[String]()
       if (requestParams.origin.length != 3) {
         errorMessages =  "Origin chars length should be 3." :: errorMessages
       }
