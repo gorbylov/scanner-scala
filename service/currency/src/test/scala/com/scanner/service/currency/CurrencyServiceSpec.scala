@@ -19,7 +19,7 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
 
   "CurrencyService actor" should {
 
-    val actorRef = TestActorRef(new CurrencyService(system.scheduler, interval seconds) {
+    val actorRef = TestActorRef(new CurrencyService(system.scheduler, schedulerInterval seconds) {
       override def fetchCurrencies(): Map[String, BigDecimal] = Map("EUR" -> 2, "UAH" -> 3) // preventing api calling
     })
 

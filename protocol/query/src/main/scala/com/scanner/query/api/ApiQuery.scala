@@ -49,5 +49,9 @@ case class Airport(
 sealed trait Airline
 case object Wizzair extends Airline
 
+sealed trait Direction
+case object OneWay extends Direction
+case object BothWays extends Direction
+
 case class Country(name: String, code: String)
 case class City(name: String, code: String)

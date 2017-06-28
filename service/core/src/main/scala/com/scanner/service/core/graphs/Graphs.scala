@@ -12,7 +12,7 @@ trait GraphBuilder[V] extends Graphs[V] {
 }
 
 trait Graph[V] extends Graphs[V] {
-  def search(from: V, to: V, edgeWeightResolver: ((V, V)) => BigDecimal) : List[Conn]
+  def search(from: V, to: V)(edgeWeightResolver: ((V, V)) => BigDecimal) : List[Conn]
   def getConnections(vertex: V): Option[List[Conn]]
   def isEmpty(): Boolean
 }

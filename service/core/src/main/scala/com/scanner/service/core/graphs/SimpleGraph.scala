@@ -5,7 +5,7 @@ package com.scanner.service.core.graphs
   */
 class SimpleGraph[V](graph: Map[V, List[List[V]]]) extends Graph[V] {
 
-  override def search(from: V, to: V, edgeWeightResolver: ((V, V)) => BigDecimal): List[Conn] = {
+  override def search(from: V, to: V)(edgeWeightResolver: ((V, V)) => BigDecimal): List[Conn] = {
     graph.get(from).fold(List[Conn]()){ connections =>
       connections
         .filter(connection => connection.contains(to))

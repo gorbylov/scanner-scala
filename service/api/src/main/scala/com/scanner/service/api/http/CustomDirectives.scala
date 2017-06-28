@@ -11,12 +11,12 @@ import com.scanner.query.api.Airline
 
 import scala.concurrent.{Await, Promise}
 import akka.http.scaladsl.server.Directives._
-import com.scanner.service.api.Api.{FailureMessage, RequestParams}
-
 import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
 import com.scanner.service.api.marshal.ApiMarshallers.failureMessageMarshaller
+import com.scanner.service.api.message.{FailureMessage, RequestParams}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -76,7 +76,6 @@ object CustomDirectives {
         entity = Await.result(Marshal(FailureMessage(408, "Request timeout")).to[MessageEntity], 2 seconds)
       )
     }
-
     withRequestTimeout(duration, handler)
   }
 }

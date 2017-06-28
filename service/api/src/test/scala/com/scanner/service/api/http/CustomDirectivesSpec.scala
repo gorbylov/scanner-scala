@@ -3,14 +3,14 @@ package com.scanner.service.api.http
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-import akka.actor.{Actor}
+import akka.actor.Actor
 import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.testkit.{ScalatestRouteTest}
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestActorRef
 import com.scanner.query.api.Wizzair
-import com.scanner.service.api.Api.{FailureMessage, RequestParams}
 import com.scanner.service.api.http.CustomDirectives.{requestParams, requestTimeout, tell, validate}
+import com.scanner.service.api.message.{FailureMessage, RequestParams}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import org.scalatest.{Matchers, WordSpec}
 import io.circe.generic.auto._

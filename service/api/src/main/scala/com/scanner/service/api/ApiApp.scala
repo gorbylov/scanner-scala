@@ -4,10 +4,12 @@ import akka.actor.{ActorSelection, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.scanner.query.api.Wizzair
+import com.scanner.service.api.actor.{ApiService, FlightsAgregator}
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
-import scala.util.{Failure, Success}
 
+import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -22,13 +24,13 @@ object ApiApp extends App with Api with ApiConfig{
   implicit val materializer = ActorMaterializer()
   implicit val timeout = Timeout(10 seconds)
 
-  val wizzairService =
-    locateActor(wizzairConfig.getString("host"), wizzairConfig.getString("port"), wizzairConfig.getString("name"))
+
 
   val apiService = system.actorOf(
-    Props(classOf[ApiService], wizzairService),
+    Props(classOf[ApiService]),
     "apiService"
   )
+
   Http().bindAndHandle(routes(apiService), httpInterface, httpPort)
 
   def locateActor(host: String, port: String, name: String): ActorSelection =
