@@ -35,3 +35,9 @@ case class BuildPath(
   params: RequestParams,
   direction: Direction
 )
+
+case class ResolveAirportMessage(
+  context: ImperativeRequestContext,
+  params: RequestParams,
+  direction: Direction
+)

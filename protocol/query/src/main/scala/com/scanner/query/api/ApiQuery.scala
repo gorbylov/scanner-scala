@@ -37,13 +37,10 @@ case class GetOneWayFlightsView(
 )
 
 case class Airport(
+  iata: String,
   name: String,
-  code: String,
-  lat: Double,
-  lng: Double
-//  country: Country,
-//  city: City,
-//  utc: Double
+  lat: BigDecimal,
+  lon: BigDecimal
 )
 
 sealed trait Airline
