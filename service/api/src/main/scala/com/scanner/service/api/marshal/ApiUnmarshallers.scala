@@ -2,7 +2,7 @@ package com.scanner.service.api.marshal
 
 import akka.http.scaladsl.unmarshalling.FromStringUnmarshaller
 import akka.stream.Materializer
-import com.scanner.query.api.{Airline, Wizzair}
+import com.scanner.query.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,6 +15,14 @@ object ApiUnmarshallers {
     override def apply(value: String)(implicit ec: ExecutionContext, materializer: Materializer): Future[Airline] =
       Future(value.toLowerCase match {
         case "wizzair" => Wizzair
+      })
+  }
+
+  implicit def directionUnmarshaller = new FromStringUnmarshaller[Direction] {
+    override def apply(value: String)(implicit ec: ExecutionContext, materializer: Materializer): Future[Direction] =
+      Future(value.toLowerCase match {
+        case "one" => OneWay
+        case "both" => BothWays
       })
   }
 }

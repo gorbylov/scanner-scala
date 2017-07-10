@@ -14,13 +14,15 @@ case class OneWayRequest(
   context: ImperativeRequestContext,
   params: RequestParams
 ) extends ApiMessage
-case class RequestParams (
- origin: String,
- arrival: String,
- from: LocalDate,
- to: LocalDate,
- airlines: List[Airline],
- currency: String
+
+case class RequestParams(
+  origin: String,
+  arrival: String,
+  from: LocalDate,
+  to: LocalDate,
+  airlines: List[Airline],
+  currency: String,
+  direction: Direction
 )
 
 case class FailureMessage(

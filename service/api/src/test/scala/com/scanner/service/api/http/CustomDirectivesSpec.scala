@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestActorRef
-import com.scanner.query.api.Wizzair
+import com.scanner.query.api.{OneWay, Wizzair}
 import com.scanner.service.api.http.CustomDirectives.{requestParams, requestTimeout, tell, validate}
 import com.scanner.service.api.message.{FailureMessage, RequestParams}
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -71,16 +71,18 @@ class CustomDirectivesSpec extends WordSpec
       val to = "2017-12-31"
       val airline = "wizzair"
       val currency = "UAH"
+      val direction = "one"
       val expectedResult = RequestParams(
         origin,
         arrival,
         LocalDate.parse(from, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
         LocalDate.parse(to, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
         Wizzair :: Nil,
-        currency
+        currency,
+        OneWay
       )
 
-      Get(s"/test?origin=$origin&arrival=$arrival&from=$from&to=$to&airline=$airline&currency=$currency") ~> testRoute ~> check {
+      Get(s"/test?origin=$origin&arrival=$arrival&from=$from&to=$to&airline=$airline&currency=$currency&direction=$direction")~> testRoute ~> check {
         status shouldBe OK
         val response = responseAs[String]
         parse(response).flatMap(_.as[RequestParams]).fold(
@@ -110,8 +112,9 @@ class CustomDirectivesSpec extends WordSpec
       val badTo = "2016-01-01"
       val airline = "wizzair"
       val badCurrency = "CCCC"
+      val direction = "one"
 
-      Get(s"/test?origin=$badOrigin&arrival=$badArrival&from=$badFrom&to=$badTo&airline=$airline&currency=$badCurrency") ~> testRoute ~> check {
+      Get(s"/test?origin=$badOrigin&arrival=$badArrival&from=$badFrom&to=$badTo&airline=$airline&currency=$badCurrency&direction=$direction") ~> testRoute ~> check {
         status shouldBe BadRequest
         val response = responseAs[FailureMessage]
         response.status shouldBe 400
@@ -124,7 +127,7 @@ class CustomDirectivesSpec extends WordSpec
       val to = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
       val currency = "CCC"
 
-      Get(s"/test?origin=$origin&arrival=$arrival&from=$from&to=$to&airline=$airline&currency=$currency") ~> testRoute ~> check {
+      Get(s"/test?origin=$origin&arrival=$arrival&from=$from&to=$to&airline=$airline&currency=$currency&direction=$direction")~> testRoute ~> check {
         status shouldBe OK
         responseAs[String] shouldBe successMessage
       }

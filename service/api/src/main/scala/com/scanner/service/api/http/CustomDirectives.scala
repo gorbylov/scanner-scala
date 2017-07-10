@@ -1,13 +1,12 @@
 package com.scanner.service.api.http
 
 import java.time.LocalDate
-import java.util.concurrent.TimeUnit
 
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.parameters
 import akka.http.scaladsl.server._
-import com.scanner.query.api.Airline
+import com.scanner.query.api.{Airline, Direction}
 
 import scala.concurrent.{Await, Promise}
 import akka.http.scaladsl.server.Directives._
@@ -26,10 +25,18 @@ import scala.concurrent.duration._
 object CustomDirectives {
 
   def requestParams: Directive[Tuple1[RequestParams]] = {
-    parameters('origin, 'arrival, 'from.as[LocalDate], 'to.as[LocalDate], 'airline.as[Airline].*, 'currency)
+    parameters(
+      'origin,
+      'arrival,
+      'from.as[LocalDate],
+      'to.as[LocalDate],
+      'airline.as[Airline].*,
+      'currency,
+      'direction.as[Direction]
+    )
       .tmap {
-        case (origin, arrival, from, to, airlines, currency) =>
-          RequestParams(origin, arrival, from, to, airlines.toList, currency)
+        case (origin, arrival, from, to, airlines, currency, direction) =>
+          RequestParams(origin, arrival, from, to, airlines.toList, currency, direction)
       }
   }
 
