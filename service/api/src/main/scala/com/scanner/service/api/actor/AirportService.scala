@@ -1,8 +1,7 @@
 package com.scanner.service.api.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import com.scanner.query.api.Airport
-import com.scanner.service.api.message.ResolveAirportMessage
+import com.scanner.query.api.{Airport, ResolveAirportMessage}
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -10,7 +9,6 @@ import io.circe.generic.auto._
 import io.circe.parser._
 
 import scala.util.{Failure, Success}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -39,7 +37,7 @@ class AirportService(pathService: ActorRef) extends Actor with ActorLogging {
   }
 
   override def receive: Receive = {
-    case ResolveAirportMessage(ctx, requestParams, direction) =>
+    case ResolveAirportMessage(requestId, requestParams) =>
       // TODO if origin or arrival airport is missed we need to try to find them on another service
       val originAirport = airportsState.getOrElse(requestParams.origin, Airport("", "", 0, 0))
       val arrivalAirport = airportsState.getOrElse(requestParams.arrival, Airport("", "", 0, 0))

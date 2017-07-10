@@ -2,8 +2,6 @@ package com.scanner.service.api.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import com.scanner.query.api._
-import com.scanner.service.api.actor.ApiService.BuildGraph
-import com.scanner.service.api.message.{BuildPath, CollectOneWayFlights}
 import com.scanner.service.core.graphs.Graph
 import akka.pattern.ask
 import akka.util.Timeout
@@ -50,7 +48,7 @@ class PathService(
         }
 
 
-    case BuildPath(ctx, params, OneWay) => ???
+    case BuildPathMessage(requestID, origin, arrival, params) => ???
       // TODO origin as airport
 //     graph.search(params.origin, params.arrival) { (a, b) =>
 //

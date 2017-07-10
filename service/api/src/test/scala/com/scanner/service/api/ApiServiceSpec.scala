@@ -2,8 +2,8 @@ package com.scanner.service.api
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import com.scanner.query.api.BuildGraph
 import com.scanner.service.api.actor.ApiService
-import com.scanner.service.api.actor.ApiService.BuildGraph
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 /**

@@ -4,7 +4,7 @@ import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model.{HttpEntity, MessageEntity}
 import akka.util.ByteString
-import com.scanner.service.api.message.FailureMessage
+import com.scanner.query.api.FailureMessage
 import io.circe.generic.auto._
 import io.circe.syntax._
 

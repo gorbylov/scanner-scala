@@ -36,11 +36,40 @@ case class GetOneWayFlightsView(
   currency: String
 )
 
+case class ResolveAirportMessage(
+  requestId: String,
+  params: RequestParams
+) extends ApiQuery
+
+case class BuildPathMessage(
+  requestId: String,
+  origin: Airport,
+  arrival: Airport,
+  params: RequestParams
+) extends ApiQuery
+
+case object BuildGraph extends ApiQuery
+
+case class FailureMessage(
+  status: Int,
+  message: String
+)
+
 case class Airport(
   iata: String,
   name: String,
   lat: BigDecimal,
   lon: BigDecimal
+)
+
+case class RequestParams(
+  origin: String,
+  arrival: String,
+  from: LocalDate,
+  to: LocalDate,
+  airlines: List[Airline],
+  currency: String,
+  direction: Direction
 )
 
 sealed trait Airline

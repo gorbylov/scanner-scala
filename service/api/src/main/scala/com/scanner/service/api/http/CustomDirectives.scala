@@ -6,7 +6,7 @@ import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.parameters
 import akka.http.scaladsl.server._
-import com.scanner.query.api.{Airline, Direction}
+import com.scanner.query.api.{Airline, Direction, FailureMessage, RequestParams}
 
 import scala.concurrent.{Await, Promise}
 import akka.http.scaladsl.server.Directives._
@@ -14,7 +14,6 @@ import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
 import com.scanner.service.api.marshal.ApiMarshallers.failureMessageMarshaller
-import com.scanner.service.api.message.{FailureMessage, RequestParams}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

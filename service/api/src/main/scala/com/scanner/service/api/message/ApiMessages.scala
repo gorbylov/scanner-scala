@@ -1,8 +1,6 @@
 package com.scanner.service.api.message
 
-import java.time.LocalDate
-
-import com.scanner.query.api.{Airline, Direction}
+import com.scanner.query.api.RequestParams
 import com.scanner.service.api.http.ImperativeRequestContext
 
 /**
@@ -10,36 +8,7 @@ import com.scanner.service.api.http.ImperativeRequestContext
   */
 sealed trait ApiMessage
 
-case class OneWayRequest(
+case class RequestMessage(
   context: ImperativeRequestContext,
   params: RequestParams
 ) extends ApiMessage
-
-case class RequestParams(
-  origin: String,
-  arrival: String,
-  from: LocalDate,
-  to: LocalDate,
-  airlines: List[Airline],
-  currency: String,
-  direction: Direction
-)
-
-case class FailureMessage(
- status: Int,
- message: String
-) extends ApiMessage
-
-case object CollectOneWayFlights extends ApiMessage
-
-case class BuildPath(
-  context: ImperativeRequestContext,
-  params: RequestParams,
-  direction: Direction
-)
-
-case class ResolveAirportMessage(
-  context: ImperativeRequestContext,
-  params: RequestParams,
-  direction: Direction
-)

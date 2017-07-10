@@ -13,7 +13,7 @@ import akka.http.scaladsl.server.Directives._
 import io.circe.generic.auto._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
-import com.scanner.service.api.message.OneWayRequest
+import com.scanner.service.api.message.RequestMessage
 
 /**
   * Created by IGorbylov on 09.03.2017.
@@ -29,7 +29,7 @@ trait Api extends CirceSupport {
           validate(params) {
             requestTimeout(10 seconds) {
               tell { ctx =>
-                apiService ! OneWayRequest(ctx, params)
+                apiService ! RequestMessage(ctx, params)
               }
             }
           }
