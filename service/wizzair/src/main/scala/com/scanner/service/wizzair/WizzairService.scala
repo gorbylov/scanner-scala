@@ -30,13 +30,15 @@ class WizzairService extends Actor {
   )
 
   override def receive: Receive = {
-    case GetConnectionsQuery => makeConnectionsResponse().pipeTo(sender())
+    case GetConnectionsQuery =>
+      val futureConnections = fetchWizzairConnections()
+      futureConnections pipeTo sender()
 
-    case GetOneWayFlightsRequest(origin, arrival, from, to, _, currency) =>
+    case GetFlightsMessage(_, _, origin, arrival, from, to, _, currency) =>
       val currentSender = sender()
 
       val futureResponses = (from, to).toMonthsInterval().map { date =>
-        (wizzairRouter ? GetWizzairFlightsQuery(origin, arrival, date.getYear, date.getMonth.getValue))
+        (wizzairRouter ? GetWizzairFlightsQuery(origin.iata, arrival.iata, date.getYear, date.getMonth.getValue))
           .mapTo[WizzairResponse]
       }.sequence
 
@@ -49,7 +51,7 @@ class WizzairService extends Actor {
             .flatMap {
               case GetWizzairFlightsResponse(flights) =>
                 flights.map { view =>
-                  GetOneWayFlightsView(
+                  FlightView(
                     view.flightNumber,
                     view.origin,
                     view.arrival,
@@ -66,7 +68,7 @@ class WizzairService extends Actor {
         .pipeTo(currentSender)
   }
 
-  def makeConnectionsResponse(): Future[GetConnectionsResponse] = {
+  def fetchWizzairConnections(): Future[GetConnectionsResponse] = {
     Future(Source.fromURL(s"$apiRoot/asset/map?languageCode=en-gb", "UTF-8").mkString)
       .flatMap(content =>
         Future.fromTry(parse(content).flatMap(json => json.as[WizzairCities]).toTry)
@@ -78,7 +80,7 @@ class WizzairService extends Actor {
 }
 
 object WizzairService {
-  def apiRoot = s"https://be.wizzair.com/$apiVersion/Api"
+  val apiRoot = s"https://be.wizzair.com/$apiVersion/Api"
   val apiVersion = "5.2.2"
 
   case class WizzairCities(cities: List[WizzairCity])

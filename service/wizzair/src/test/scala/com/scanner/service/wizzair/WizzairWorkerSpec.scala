@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.query.api.{GetOneWayFlightsRequest, GetOneWayFlightsResponse, GetOneWayFlightsView}
+import com.scanner.query.api.{GetFlightsMessage, GetOneWayFlightsResponse, FlightView}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -26,7 +26,7 @@ class WizzairWorkerSpec extends TestKit(ActorSystem("testSystem"))
 
   "WizzairWorker" should  {
     "return list of flights for specified direction and dates" in {
-      wizzairWorker ! GetOneWayFlightsRequest("IEV", "BUD", LocalDate.now(), LocalDate.now().plusMonths(1), Seq(), "UAH")
+      wizzairWorker ! GetFlightsMessage("IEV", "BUD", LocalDate.now(), LocalDate.now().plusMonths(1), Seq(), "UAH")
       expectMsgPF(5 seconds) {
         case GetOneWayFlightsResponse(flights) if flights.nonEmpty => true
       }

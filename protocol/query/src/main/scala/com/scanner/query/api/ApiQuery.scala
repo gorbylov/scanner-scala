@@ -10,22 +10,24 @@ import com.scanner.query.core.{Query, Response}
 sealed trait ApiQuery extends Query
 sealed trait ApiResponse extends Response
 
-case class GetOneWayFlightsRequest(
-  origin: String,
-  arrival: String,
-  start: LocalDate,
-  end: LocalDate,
+case class GetFlightsMessage(
+  requestId: String,
+  pathId: String,
+  origin: Airport,
+  arrival: Airport,
+  from: LocalDate,
+  to: LocalDate,
   airlines: Seq[Airline],
   currency: String
 ) extends ApiQuery
 case class GetOneWayFlightsResponse(
-  flights: List[GetOneWayFlightsView]
+  flights: List[FlightView]
 ) extends ApiResponse
 
 case object GetConnectionsQuery extends ApiQuery
 case class GetConnectionsResponse(connections: Map[String, List[String]]) extends ApiResponse
 
-case class GetOneWayFlightsView(
+case class FlightView(
   flightNumber: String,
   origin: String,
   arrival: String,
@@ -48,7 +50,7 @@ case class BuildPathMessage(
   params: RequestParams
 ) extends ApiQuery
 
-case object BuildGraph extends ApiQuery
+case class BuildGraph(airportsState: Map[String, Airport]) extends ApiQuery
 
 case class FailureMessage(
   status: Int,
@@ -59,7 +61,7 @@ case class Airport(
   iata: String,
   name: String,
   lat: BigDecimal,
-  lon: BigDecimal
+  lng: BigDecimal
 )
 
 case class RequestParams(

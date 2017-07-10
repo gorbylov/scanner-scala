@@ -1,5 +1,7 @@
 package com.scanner.service.api.actor
 
+import java.util.UUID
+
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
 import com.scanner.query.api._
 import com.scanner.service.core.graphs.Graph
@@ -9,8 +11,9 @@ import akka.util.Timeout
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.scanner.service.core.utils.SequenceUtils.FutureSequence
 import com.scanner.service.core.utils.Exceptions.ExceptionUtils
-import scala.concurrent.duration._
+import com.scanner.service.core.utils.MathUtils
 
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 /**
@@ -21,15 +24,15 @@ class PathService(
   airlineServices: List[(Airline, ActorSelection)]
 ) extends Actor with ActorLogging {
 
-  var graph: Graph[String] = Graph.empty
+  var graph: Graph[Airport] = Graph.empty
+
+  val emptyAirport = Airport("", "", 0, 0) // see AirportService to do
 
   implicit val timeout = Timeout(5 seconds)
 
-  override def preStart(): Unit = self ! BuildGraph
-
   override def receive: Receive = {
 
-    case BuildGraph =>
+    case BuildGraph(airportsState) =>
       airlineServices.map {
         case (_, service) =>
           (service ? GetConnectionsQuery)
@@ -42,17 +45,43 @@ class PathService(
         .map(_.flatten)
         .onComplete{
           case Success(relations) =>
-            graph = Graph.build(relations)
+            val airportRelations = relations.map{
+              case (code1, code2) =>
+                airportsState.getOrElse(code1, emptyAirport) -> airportsState.getOrElse(code2, emptyAirport)
+            }
+            graph = Graph.build(airportRelations)
           case Failure(error) =>
             log.error(s"An error occurred while building a graph.\n${error.mkString()}")
         }
 
 
-    case BuildPathMessage(requestID, origin, arrival, params) => ???
-      // TODO origin as airport
-//     graph.search(params.origin, params.arrival) { (a, b) =>
-//
-//     }
+    case BuildPathMessage(requestId, origin, arrival, params) =>
+      val connections = graph.search(origin, arrival) {
+        case (a1, a2) => MathUtils.haversineDistance(a1.lat -> a1.lng, a2.lat -> a2.lng)
+      }
+      connections
+        .map(path => (path zip path.tail, UUID.randomUUID().toString))
+        .foreach{
+          case (pathPairs, pathId) =>
+            pathPairs.foreach{
+              case (airport1, airport2) =>
+                flightsAgregator ! GetFlightsMessage(
+                  requestId,
+                  pathId,
+                  airport1,
+                  airport2,
+                  params.from,
+                  params.to,
+                  params.airlines,
+                  params.currency
+                )
+            }
+
+
+        }
+
 
   }
+
+
 }

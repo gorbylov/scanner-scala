@@ -1,7 +1,7 @@
 package com.scanner.service.api.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import com.scanner.query.api.{Airport, ResolveAirportMessage}
+import com.scanner.query.api.{Airport, BuildGraph, BuildPathMessage, ResolveAirportMessage}
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -18,6 +18,7 @@ class AirportService(pathService: ActorRef) extends Actor with ActorLogging {
 
   var airportsState: Map[String, Airport] = Map.empty
 
+  val emptyAirport = Airport("", "", 0, 0)
 
   override def preStart(): Unit = {
     val airportsUrl = "https://raw.githubusercontent.com/jbrooksuk/JSON-Airports/master/airports.json"
@@ -31,6 +32,7 @@ class AirportService(pathService: ActorRef) extends Actor with ActorLogging {
     futureAirports.onComplete {
       case Success(airports) =>
         airportsState = airports.map(airport => airport.iata -> airport).toMap
+        pathService ! BuildGraph(airportsState)
       case Failure(error) =>
         log.error("An error occured while getting airports.", error)
     }
@@ -39,9 +41,9 @@ class AirportService(pathService: ActorRef) extends Actor with ActorLogging {
   override def receive: Receive = {
     case ResolveAirportMessage(requestId, requestParams) =>
       // TODO if origin or arrival airport is missed we need to try to find them on another service
-      val originAirport = airportsState.getOrElse(requestParams.origin, Airport("", "", 0, 0))
-      val arrivalAirport = airportsState.getOrElse(requestParams.arrival, Airport("", "", 0, 0))
-      //pathService ! BuildPathMessage(originAirport, arrivalAirport, ctx, requestParams, direction)
+      val originAirport = airportsState.getOrElse(requestParams.origin, emptyAirport)
+      val arrivalAirport = airportsState.getOrElse(requestParams.arrival, emptyAirport)
+      pathService ! BuildPathMessage(requestId, originAirport, arrivalAirport, requestParams)
   }
 
 }
