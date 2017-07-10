@@ -8,7 +8,7 @@ import com.scanner.service.api.http.ImperativeRequestContext
 /**
   * Created by igorbylov on 28.06.17.
   */
-sailed trait ApiMessage
+sealed trait ApiMessage
 
 case class OneWayRequest(
   context: ImperativeRequestContext,

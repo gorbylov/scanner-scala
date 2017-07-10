@@ -9,8 +9,8 @@ import com.scanner.query.api.{Airline, GetOneWayFlightsRequest, Wizzair}
 class FlightsAgregator(airlineServices: List[(Airline, ActorSelection)]) extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case oneWayQuery: GetOneWayFlightsRequest =>
-      oneWayQuery.airlines.map{
+    case oneWayQuery: GetOneWayFlightsRequest => ???
+      /*oneWayQuery.airlines.map{
         case Wizzair => (wizzairService ? oneWayQuery)
           .mapTo[GetOneWayFlightsResponse]
           .map(_.flights)

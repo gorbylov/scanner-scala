@@ -2,7 +2,7 @@ package com.scanner.service.api.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import com.scanner.query.api.Airport
-import com.scanner.service.api.message.{BuildPathMessage, ResolveAirportMessage}
+import com.scanner.service.api.message.ResolveAirportMessage
 
 import scala.concurrent.Future
 import scala.io.Source
