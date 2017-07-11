@@ -10,7 +10,6 @@ import com.scanner.service.api.message.RequestMessage
 import com.scanner.service.core.actor.ActorSelecting
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import com.scanner.service.core.utils.SequenceUtils.FutureSequence
 
 /**
   * Created by IGorbylov on 04.04.2017.
@@ -20,7 +19,7 @@ class ApiService extends Actor with ActorLogging with ActorSelecting with ApiCon
   var requestsState: Map[String, ImperativeRequestContext] = Map.empty
 
   val airlineServices = List(
-    Wizzair -> locateActor(wizzairConfig)
+    Wizzair -> locateRemoteActor(wizzairConfig)
   )
 
   val flightsAgregatorService = context.actorOf(

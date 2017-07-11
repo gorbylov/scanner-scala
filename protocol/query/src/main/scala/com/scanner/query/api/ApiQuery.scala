@@ -38,6 +38,11 @@ case class FlightView(
   currency: String
 )
 
+case object FetchAirportsMessage extends ApiQuery
+
+case object GetAirportsStateQuery extends ApiQuery
+case class GetAirportsStateResponse(airportsState: Map[String, Airport]) extends ApiResponse
+
 case class ResolveAirportMessage(
   requestId: String,
   params: RequestParams

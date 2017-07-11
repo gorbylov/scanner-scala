@@ -8,7 +8,7 @@ import com.scanner.query.api.{Airline, FlightView, GetFlightsMessage}
   */
 class FlightsAgregator(airlineServices: List[(Airline, ActorSelection)]) extends Actor with ActorLogging {
 
-  val flightsState = Map[String, Map[String, List[FlightView]]] = Map.empty
+  val flightsState: Map[String, Map[String, List[FlightView]]] = Map.empty
 
   override def receive: Receive = {
     case GetFlightsMessage(requestId, pathId, origin, arrival, from, to, airlines, currency) => ???
