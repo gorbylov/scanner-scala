@@ -80,8 +80,8 @@ class WizzairService extends Actor {
 }
 
 object WizzairService {
+  val apiVersion = "6.0.3" // TODO find out how to get api version
   val apiRoot = s"https://be.wizzair.com/$apiVersion/Api"
-  val apiVersion = "5.2.2"
 
   case class WizzairCities(cities: List[WizzairCity])
   case class WizzairCity(

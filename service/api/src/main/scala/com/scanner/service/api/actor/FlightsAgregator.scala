@@ -11,6 +11,7 @@ class FlightsAgregator(airlineServices: List[(Airline, ActorSelection)]) extends
   val flightsState: Map[String, Map[String, List[FlightView]]] = Map.empty
 
   override def receive: Receive = {
-    case GetFlightsMessage(requestId, pathId, origin, arrival, from, to, airlines, currency) => ???
+    case GetFlightsMessage(requestId, pathId, origin, arrival, from, to, airlines, currency) =>
+      log.info("FlightsAggregator not implemented yet")
   }
 }

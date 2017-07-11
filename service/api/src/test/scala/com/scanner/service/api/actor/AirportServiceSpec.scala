@@ -30,7 +30,7 @@ class AirportServiceSpec extends TestKit(ActorSystem("testSystem"))
     "fetch all airports, save result to state and send it to PathService actor" in {
       airportService ! FetchAirportsMessage
       pathServiceProbe.expectMsgPF(5 seconds) {
-        case BuildGraph(state) =>
+        case BuildGraphMessage(state) =>
           state.nonEmpty shouldBe true
       }
 

@@ -18,6 +18,6 @@ trait Graph[V] extends Graphs[V] {
 }
 
 object Graph {
-  def build[V](relations: List[(V, V)]): Graph[V] = SimpleGraphBuilder().build(relations)
+  def build[V](relations: List[(V, V)], depth: Int): Graph[V] = SimpleGraphBuilder().build(relations)(depth)
   def empty[V]: Graph[V] = SimpleGraph(Map.empty)
 }

@@ -20,8 +20,6 @@ import com.scanner.service.api.message.RequestMessage
   */
 trait Api extends CirceSupport {
 
-  implicit val askTimeout = Timeout(10 seconds)
-
   def routes(apiService: ActorRef): Route = encodeResponse {
     path("scan") {
       get {

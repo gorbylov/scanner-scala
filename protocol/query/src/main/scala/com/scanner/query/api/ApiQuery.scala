@@ -55,7 +55,10 @@ case class BuildPathMessage(
   params: RequestParams
 ) extends ApiQuery
 
-case class BuildGraph(airportsState: Map[String, Airport]) extends ApiQuery
+case class BuildGraphMessage(airportsState: Map[String, Airport]) extends ApiQuery
+
+case object GraphIsEmptyQuery extends ApiQuery
+case class GraphIsEmptyResponse(empty: Boolean)
 
 case class FailureMessage(
   status: Int,
@@ -66,7 +69,7 @@ case class Airport(
   iata: String,
   name: String,
   lat: BigDecimal,
-  lng: BigDecimal
+  lon: BigDecimal
 )
 
 case class RequestParams(
