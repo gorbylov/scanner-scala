@@ -5,7 +5,7 @@ import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestActors, TestKit, TestProbe}
-import com.scanner.query.api._
+import com.scanner.message.api._
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -34,7 +34,7 @@ class AirportServiceSpec extends TestKit(ActorSystem("testSystem"))
           state.nonEmpty shouldBe true
       }
 
-      airportService ! GetAirportsStateQuery
+      airportService ! GetAirportsStateMessage
       expectMsgPF(5 seconds) {
         case GetAirportsStateResponse(state) =>
           state.nonEmpty shouldBe true

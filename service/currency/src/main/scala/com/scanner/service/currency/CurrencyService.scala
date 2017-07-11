@@ -1,7 +1,7 @@
 package com.scanner.service.currency
 
 import akka.actor.{Actor, ActorLogging, Scheduler}
-import com.scanner.query.currency._
+import com.scanner.message.currency._
 import io.circe.generic.auto._
 import io.circe.parser._
 
@@ -16,18 +16,18 @@ import scala.language.postfixOps
   */
 class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Actor with ActorLogging {
 
-  scheduler.schedule(interval, interval, self, UpdateCurrencyStateQuery)
+  scheduler.schedule(interval, interval, self, UpdateCurrencyStateMessage)
 
   var state: Map[String, BigDecimal] = fetchCurrencies()
 
   override def receive: Receive = {
-    case GetCurrenciesCoefficientQuery(from, to) =>
+    case GetCurrenciesCoefficientMessage(from, to) =>
       log.info(s"Got request to get coefficient from $from to $to")
       sender ! GetCurrenciesCoefficientResponse(convert(from, to, 1))
-    case ConvertCurrencyQuery(from, to, value) =>
+    case ConvertCurrencyMessage(from, to, value) =>
       log.info(s"Got request to convert currency from $from to $to")
       sender ! ConvertCurrencyResponse(convert(from, to, value))
-    case UpdateCurrencyStateQuery =>
+    case UpdateCurrencyStateMessage =>
       log.info("Updating currency state.")
       state = fetchCurrencies()
   }

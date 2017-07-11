@@ -1,7 +1,7 @@
 package com.scanner.service.api.actor
 
 import akka.actor.{Actor, ActorLogging, ActorSelection}
-import com.scanner.query.api.{Airline, FlightView, GetFlightsMessage}
+import com.scanner.message.api.{Airline, FlightView, GetFlightsMessage}
 
 /**
   * Created by igorbylov on 28.06.17.

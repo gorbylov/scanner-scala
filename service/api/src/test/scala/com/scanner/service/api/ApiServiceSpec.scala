@@ -2,7 +2,7 @@ package com.scanner.service.api
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.query.api.BuildGraphMessage
+import com.scanner.message.api.BuildGraphMessage
 import com.scanner.service.api.actor.ApiService
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 

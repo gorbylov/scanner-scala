@@ -7,7 +7,7 @@ import akka.actor.Actor
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestActorRef
-import com.scanner.query.api._
+import com.scanner.message.api._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import io.circe.generic.auto._

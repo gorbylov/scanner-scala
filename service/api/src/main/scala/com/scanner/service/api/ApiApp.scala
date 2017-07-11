@@ -4,7 +4,7 @@ import akka.actor.{ActorSelection, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.scanner.query.api.Wizzair
+import com.scanner.message.api.Wizzair
 import com.scanner.service.api.actor.{AirportService, ApiService, FlightsAgregator, PathService}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.Logger

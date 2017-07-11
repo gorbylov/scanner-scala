@@ -49,21 +49,21 @@ val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % "10.0.4" % "test
 
 // Project
 lazy val root = (project in file("."))
-  .aggregate(query, core, api, currency)
+  .aggregate(message, core, api, currency)
   .settings(name := """scanner-server""")
   .settings(baseSettings)
 
 //protocol
-lazy val query = module(
-  name = "query",
-  location = "protocol/query"
+lazy val message = module(
+  name = "message",
+  location = "protocol/message"
 )
 
 //cluster
 lazy val clusterSeed = service(
-  "cluster-seed",
-  "cluster-seed",
-  dependencies = Seq(query),
+  name = "cluster-seed",
+  location = "cluster-seed",
+  dependencies = Seq(message),
   libs = Seq(akkaActor, akkaCluster)
 )
 
@@ -71,24 +71,24 @@ lazy val clusterSeed = service(
 lazy val core = module(
   name = "core",
   location = "service/core",
-  dependencies = Seq(query),
+  dependencies = Seq(message),
   libs = Seq(akkaActor, akkaCluster, akkaHttp, akkaCirce, akkaSlf4j, logback, typeSafeLogs, scalaTest, akkaTest)
 )
 lazy val currency = service(
   name = "currency",
   location = "service/currency",
-  dependencies = Seq(core, query),
+  dependencies = Seq(core, message),
   libs = Seq(scalaTest, akkaTest) ++ circeSuite
 )
 lazy val api = service(
   name = "api",
   location = "service/api",
-  dependencies = Seq(core, query),
+  dependencies = Seq(core, message),
   libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
 )
 lazy val wizzair = service(
   name = "wizzair",
   location = "service/wizzair",
-  dependencies = Seq(core, query),
+  dependencies = Seq(core, message),
   libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
 )

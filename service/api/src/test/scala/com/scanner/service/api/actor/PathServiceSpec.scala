@@ -3,7 +3,7 @@ package com.scanner.service.api.actor
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActors.EchoActor
 import akka.testkit.{ImplicitSender, TestActor, TestActors, TestKit, TestProbe}
-import com.scanner.query.api._
+import com.scanner.message.api._
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -29,7 +29,7 @@ class PathServiceSpec extends TestKit(ActorSystem("testSystem"))
   "PathService actor" should {
     "build graph" in {
       pathService ! BuildGraphMessage
-      pathService ! GraphIsEmptyQuery
+      pathService ! GraphIsEmptyMessage
       expectMsgPF(5 seconds) {
         case GraphIsEmptyResponse(isEmpty) => isEmpty shouldBe false
       }

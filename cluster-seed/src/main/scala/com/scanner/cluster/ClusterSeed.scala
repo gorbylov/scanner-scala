@@ -3,7 +3,7 @@ package com.scanner.cluster
 import akka.actor.{Actor, ActorLogging, Address}
 import akka.cluster.Cluster
 import akka.cluster.ClusterEvent._
-import com.scanner.query.cluster.{GetClusterMembersQuery, GetClusterMembersResponse}
+import com.scanner.message.cluster.{GetClusterMembersMessage, GetClusterMembersResponse}
 
 /**
   * Created by Iurii on 07-06-2017.
@@ -31,7 +31,7 @@ class ClusterSeed extends Actor with ActorLogging{
       log.info(s"Member detected as unreachable: ${member.address}")
       members -= member.address.toString
 
-    case GetClusterMembersQuery =>
+    case GetClusterMembersMessage =>
       sender() ! GetClusterMembersResponse(members)
   }
 }

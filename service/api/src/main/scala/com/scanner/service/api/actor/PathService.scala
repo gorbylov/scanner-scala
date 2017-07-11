@@ -3,7 +3,7 @@ package com.scanner.service.api.actor
 import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
-import com.scanner.query.api._
+import com.scanner.message.api._
 import com.scanner.service.core.graphs.Graph
 import akka.pattern.ask
 import akka.util.Timeout
@@ -24,9 +24,9 @@ class PathService(
   airlineServices: List[(Airline, ActorSelection)]
 ) extends Actor with ActorLogging {
 
-  var graph: Graph[Airport] = Graph.empty
+  var graph: Graph[AirportView] = Graph.empty
 
-  val emptyAirport = Airport("", "", 0, 0) // see AirportService to do
+  val emptyAirport = AirportView("", "", 0, 0) // see AirportService to do
 
   implicit val timeout = Timeout(20 seconds) // TODO get rid of it
 
@@ -58,7 +58,7 @@ class PathService(
     case BuildGraphMessage(airportsState) =>
       airlineServices.map {
         case (_, service) =>
-          (service ? GetConnectionsQuery)
+          (service ? GetConnectionsMessage)
             .mapTo[GetConnectionsResponse]
             .map { response =>
               response.connections.toList.flatMap { case (origin, connections) => connections.map((origin, _)) }
@@ -77,7 +77,7 @@ class PathService(
             log.error(s"An error occurred while building a graph.\n${error.mkString()}")
         }
 
-    case GraphIsEmptyQuery =>
+    case GraphIsEmptyMessage =>
       sender() ! GraphIsEmptyResponse(graph.isEmpty())
 
 

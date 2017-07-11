@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-import com.scanner.query.api._
-import com.scanner.query.wizzair.{GetWizzairFlightsQuery, GetWizzairFlightsResponse, WizzairFailure, WizzairResponse}
+import com.scanner.message.api._
+import com.scanner.message.wizzair.{GetWizzairFlightsMessage, GetWizzairFlightsResponse, WizzairFailure, WizzairResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -30,7 +30,7 @@ class WizzairService extends Actor {
   )
 
   override def receive: Receive = {
-    case GetConnectionsQuery =>
+    case GetConnectionsMessage =>
       val futureConnections = fetchWizzairConnections()
       futureConnections pipeTo sender()
 
@@ -38,7 +38,7 @@ class WizzairService extends Actor {
       val currentSender = sender()
 
       val futureResponses = (from, to).toMonthsInterval().map { date =>
-        (wizzairRouter ? GetWizzairFlightsQuery(origin.iata, arrival.iata, date.getYear, date.getMonth.getValue))
+        (wizzairRouter ? GetWizzairFlightsMessage(origin.iata, arrival.iata, date.getYear, date.getMonth.getValue))
           .mapTo[WizzairResponse]
       }.sequence
 

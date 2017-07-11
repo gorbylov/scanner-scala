@@ -2,7 +2,7 @@ package com.scanner.service.api.marshal
 
 import akka.http.scaladsl.unmarshalling.FromStringUnmarshaller
 import akka.stream.Materializer
-import com.scanner.query.api._
+import com.scanner.message.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -2,7 +2,7 @@ package com.scanner.service.wizzair
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.query.api.{GetConnectionsQuery, GetConnectionsResponse, GetOneWayFlightsResponse}
+import com.scanner.message.api.{GetConnectionsMessage, GetConnectionsResponse, GetOneWayFlightsResponse}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -23,7 +23,7 @@ class WizzairServiceSpec extends TestKit(ActorSystem("testSystem"))
 
   "WizzairService" should  {
     "return all connections" in {
-      wizzairService ! GetConnectionsQuery
+      wizzairService ! GetConnectionsMessage
       expectMsgPF(20 seconds) {
         case GetConnectionsResponse(connections) if connections.nonEmpty => true
       }

@@ -2,6 +2,6 @@
 .idea/
 project/project/
 project/target/
-protocol/query/target/
+protocol/message/target/
 service/currency/target/
 target/

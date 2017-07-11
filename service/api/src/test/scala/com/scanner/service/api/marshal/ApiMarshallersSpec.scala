@@ -5,7 +5,7 @@ import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.MessageEntity
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.stream.ActorMaterializer
-import com.scanner.query.api.FailureMessage
+import com.scanner.message.api.FailureMessage
 import org.scalatest.{Matchers, WordSpec}
 import com.scanner.service.api.marshal.ApiMarshallers.failureMessageMarshaller
 

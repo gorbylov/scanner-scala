@@ -2,7 +2,7 @@ package com.scanner.service.currency
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.query.currency.{ConvertCurrencyQuery, ConvertCurrencyResponse, UpdateCurrencyStateQuery}
+import com.scanner.message.currency.{ConvertCurrencyMessage, ConvertCurrencyResponse, UpdateCurrencyStateMessage}
 import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -24,18 +24,18 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
     })
 
     "receive converted value for correct currencies" in {
-      actorRef ! ConvertCurrencyQuery("EUR", "UAH", 1)
+      actorRef ! ConvertCurrencyMessage("EUR", "UAH", 1)
       expectMsg(ConvertCurrencyResponse(Some(1.5)))
     }
 
     "receive empty value for incorrect currencies" in {
-      actorRef ! ConvertCurrencyQuery("ZZZ", "FFF", 1)
+      actorRef ! ConvertCurrencyMessage("ZZZ", "FFF", 1)
       expectMsg(ConvertCurrencyResponse(None))
     }
 
     "update currency state" in {
       val stateBeforeUpdate = actorRef.underlyingActor.state
-      actorRef ! UpdateCurrencyStateQuery
+      actorRef ! UpdateCurrencyStateMessage
       val stateAfterUpdate = actorRef.underlyingActor.state
       (stateBeforeUpdate eq stateAfterUpdate) shouldBe false
     }

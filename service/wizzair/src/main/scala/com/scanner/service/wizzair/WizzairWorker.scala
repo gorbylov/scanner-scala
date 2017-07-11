@@ -3,7 +3,7 @@ package com.scanner.service.wizzair
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import akka.actor.{Actor, ActorLogging}
-import com.scanner.query.wizzair._
+import com.scanner.message.wizzair._
 import com.scanner.service.core.utils.SequenceUtils.TrySequence
 
 import scala.io.Source
@@ -26,7 +26,7 @@ class WizzairWorker extends Actor with ActorLogging {
   )
 
   override def receive: Receive = {
-    case GetWizzairFlightsQuery(origin, arrival, year, month) =>
+    case GetWizzairFlightsMessage(origin, arrival, year, month) =>
       val response = flights(origin, arrival, year, month).fold[WizzairResponse](
         error => {
           log.error(s"An error occurred while processing wizzair flights\n${error.mkString()}")
