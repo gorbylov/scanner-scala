@@ -2,7 +2,7 @@ package com.scanner.service.wizzair
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.message.api.{GetConnectionsMessage, GetConnectionsResponse, GetOneWayFlightsResponse}
+import com.scanner.message.api.{GetConnectionsMessage, GetConnectionsResponse, GetFlightsResponse}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._

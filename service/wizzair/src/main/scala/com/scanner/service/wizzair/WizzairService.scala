@@ -41,7 +41,7 @@ class WizzairService extends Actor
       val futureConnections = fetchWizzairConnections()
       futureConnections pipeTo sender()
 
-    case GetFlightsMessage(_, _, origin, arrival, from, to, _, currency) =>
+    case GetFlightsMessage(stepIndex, stepsCount, origin, arrival, from, to, currency) =>
       val currentSender = sender()
 
       val futureResponses = (from, to).toMonthsInterval().map { date =>
@@ -71,7 +71,7 @@ class WizzairService extends Actor
                 }
             }
         }
-        .map(GetOneWayFlightsResponse)
+        .map(flights => GetFlightsResponse(stepIndex, stepsCount, flights))
         .pipeTo(currentSender)
   }
 

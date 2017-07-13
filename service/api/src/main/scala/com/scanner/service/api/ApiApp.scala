@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.scanner.message.api.Wizzair
-import com.scanner.service.api.actor.{AirportService, ApiService, FlightsAgregator, PathService}
+import com.scanner.service.api.actor._
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -36,13 +36,13 @@ object ApiApp extends App with Api with ApiConfig{
       log.info(error.getMessage)
   }
 
-  val flightsAgregatorService = system.actorOf(
-    Props(classOf[FlightsAgregator], airlineServices),
-    "flightsAgregator"
+  val flightsAggregator = system.actorOf(
+    Props(classOf[FlightsAggregator]),
+    "flightsAggregator"
   )
 
   val pathService = system.actorOf(
-    Props(classOf[PathService], flightsAgregatorService, airlineServices),
+    Props(classOf[PathService], flightsAggregator, airlineServices),
     "pathService"
   )
 

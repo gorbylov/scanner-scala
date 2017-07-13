@@ -10,18 +10,29 @@ import com.scanner.message.core.{Message, Response, TestMessage}
 sealed trait ApiMessage extends Message
 sealed trait ApiResponse extends Response
 
-case class GetFlightsMessage(
+case class FetchFlightsForPathMessage(
   requestId: String,
-  pathId: String,
-  origin: AirportView,
-  arrival: AirportView,
+  path: List[(Airport, Airport)],
   from: LocalDate,
   to: LocalDate,
   airlines: Seq[Airline],
+  currency: String,
+  direction: Direction
+) extends ApiMessage
+
+case class GetFlightsMessage(
+  stepIndex: Int,
+  stepsCount: Int,
+  origin: Airport,
+  arrival: Airport,
+  from: LocalDate,
+  to: LocalDate,
   currency: String
 ) extends ApiMessage
 
-case class GetOneWayFlightsResponse(
+case class GetFlightsResponse(
+  stepIndex: Int,
+  stepsCount: Int,
   flights: List[FlightView]
 ) extends ApiResponse
 
@@ -37,9 +48,9 @@ case class ResolveAirportMessage(
 
 case class BuildPathMessage(
   requestId: String,
-  origin: AirportView,
-  arrival: AirportView,
+  origin: Airport,
+  arrival: Airport,
   params: RequestParams
 ) extends ApiMessage
 
-case class BuildGraphMessage(airportsState: Map[String, AirportView]) extends ApiMessage
+case class BuildGraphMessage(airportsState: Map[String, Airport]) extends ApiMessage

@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.message.api.{GetFlightsMessage, GetOneWayFlightsResponse, FlightView}
+import com.scanner.message.api.{GetFlightsMessage, GetFlightsResponse, FlightView}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._

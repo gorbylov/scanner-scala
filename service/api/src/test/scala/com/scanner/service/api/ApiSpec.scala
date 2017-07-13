@@ -38,7 +38,7 @@ class ApiSpec extends WordSpec with Matchers with ScalatestRouteTest with Api {
 
   val testApiService = TestActorRef(new Actor() {
     override def receive: Receive = {
-      case oneWay: GetFlightsMessage => sender ! GetOneWayFlightsResponse(List.empty)
+      case oneWay: GetFlightsMessage => sender ! GetFlightsResponse(0, 0, List.empty)
     }
   })
 

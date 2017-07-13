@@ -2,7 +2,7 @@ package com.scanner.service.api.actor
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
 import com.scanner.message.api._
 import com.scanner.service.core.graphs.Graph
 import akka.pattern.ask
@@ -13,7 +13,7 @@ import com.scanner.service.core.actor.ActorService
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.scanner.service.core.utils.SequenceUtils.FutureSequence
 import com.scanner.service.core.utils.Exceptions.ExceptionUtils
-import com.scanner.service.core.utils.MathUtils
+import com.scanner.service.core.utils.MathUtils.haversineDistance
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -22,15 +22,15 @@ import scala.util.{Failure, Success}
   * Created by Iurii on 20-06-2017.
   */
 class PathService(
-  flightsAgregator: ActorRef,
+  flightsAggregator: ActorRef,
   airlineServices: List[(Airline, ActorSelection)]
 ) extends Actor
   with ActorLogging
   with ActorService {
 
-  var graph: Graph[AirportView] = Graph.empty
+  var graph: Graph[Airport] = Graph.empty
 
-  val emptyAirport = AirportView("", "", 0, 0) // see AirportService to do
+  val emptyAirport = Airport("", "", 0, 0) // see AirportService to do
 
   implicit val timeout = Timeout(20 seconds) // TODO get rid of it
 
@@ -38,27 +38,28 @@ class PathService(
   override def handleMessage: Function[Message, Unit] = {
 
     case BuildPathMessage(requestId, origin, arrival, params) => {
+
+      val flightsFetcher = context.actorOf(
+        Props(classOf[FlightsFetcher], flightsAggregator, airlineServices),
+        s"flightsFetcher-$requestId"
+      )
+
       val connections = graph.search(origin, arrival) {
-        case (a1, a2) => MathUtils.haversineDistance(a1.lat -> a1.lon, a2.lat -> a2.lon)
+        case (airport1, airport2) => haversineDistance(airport1.lat -> airport1.lon, airport2.lat -> airport2.lon)
       }
-      connections
-        .map(path => (path zip path.tail, UUID.randomUUID().toString))
-        .foreach{
-          case (pathPairs, pathId) =>
-            pathPairs.foreach{
-              case (airport1, airport2) =>
-                flightsAgregator ! GetFlightsMessage(
-                  requestId,
-                  pathId,
-                  airport1,
-                  airport2,
-                  params.from,
-                  params.to,
-                  params.airlines,
-                  params.currency
-                )
-            }
-        }
+
+      connections.foreach{ connection =>
+        val path = connection zip connection.tail
+        flightsFetcher ! FetchFlightsForPathMessage(
+          requestId,
+          path,
+          params.from,
+          params.to,
+          params.airlines,
+          params.currency,
+          params.direction
+        )
+      }
     }
 
     case BuildGraphMessage(airportsState) =>

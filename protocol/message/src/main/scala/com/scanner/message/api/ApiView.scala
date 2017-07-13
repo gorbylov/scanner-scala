@@ -13,12 +13,12 @@ case class FlightView(
   arrival: String,
   departureTime: LocalDateTime,
   arrivalTime: LocalDateTime,
-  airline: String, // TODO use Airline trait
+  airline: Airline,
   price: BigDecimal,
   currency: String
 )
 
-case class AirportView(
+case class Airport(
   iata: String,
   name: String,
   lat: BigDecimal,
