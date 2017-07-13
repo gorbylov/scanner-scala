@@ -1,11 +1,13 @@
 package com.scanner.service.wizzair
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.scanner.message.api._
+import com.scanner.message.core.Message
 import com.scanner.message.wizzair.{GetWizzairFlightsMessage, GetWizzairFlightsResponse, WizzairFailure, WizzairResponse}
+import com.scanner.service.core.actor.ActorService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -20,7 +22,10 @@ import io.circe.parser._
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class WizzairService extends Actor {
+class WizzairService extends Actor
+  with ActorLogging
+  with ActorService {
+
   import WizzairService._
 
   implicit val askTimeout = Timeout(10 seconds)
@@ -29,7 +34,9 @@ class WizzairService extends Actor {
     "wizzairRouter"
   )
 
-  override def receive: Receive = {
+
+  override def handleMessage: Function[Message, Unit] = {
+
     case GetConnectionsMessage =>
       val futureConnections = fetchWizzairConnections()
       futureConnections pipeTo sender()
@@ -69,10 +76,13 @@ class WizzairService extends Actor {
   }
 
   def fetchWizzairConnections(): Future[GetConnectionsResponse] = {
-    Future(Source.fromURL(s"$apiRoot/asset/map?languageCode=en-gb", "UTF-8").mkString)
-      .flatMap(content =>
-        Future.fromTry(parse(content).flatMap(json => json.as[WizzairCities]).toTry)
-      )
+    val futureConnections = for {
+      content <- Future(Source.fromURL(s"$apiRoot/asset/map?languageCode=en-gb", "UTF-8").mkString)
+      json <- Future.fromTry(parse(content).toTry)
+      connections <- Future.fromTry(json.as[WizzairCities].toTry)
+    } yield connections
+
+    futureConnections
       .map(cities => cities.cities.map(city => city.iata -> city.connections.map(_.iata)).toMap)
       .map(GetConnectionsResponse)
   }

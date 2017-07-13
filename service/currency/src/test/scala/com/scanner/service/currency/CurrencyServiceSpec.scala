@@ -20,7 +20,7 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
   "CurrencyService actor" should {
 
     val actorRef = TestActorRef(new CurrencyService(system.scheduler, schedulerInterval seconds) {
-      override def fetchCurrencies(): Map[String, BigDecimal] = Map("EUR" -> 2, "UAH" -> 3) // preventing api calling
+      override def updateState(): Map[String, BigDecimal] = Map("EUR" -> 2, "UAH" -> 3) // preventing api calling
     })
 
     "receive converted value for correct currencies" in {

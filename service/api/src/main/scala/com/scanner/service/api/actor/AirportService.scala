@@ -2,7 +2,9 @@ package com.scanner.service.api.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import com.scanner.message.api._
+import com.scanner.message.core.{Message, TestMessage}
 import com.scanner.service.api.actor.AirportService.AirportDto
+import com.scanner.service.core.actor.ActorService
 
 import scala.concurrent.Future
 import scala.io.Source
@@ -15,22 +17,26 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by igorbylov on 07.07.17.
   */
-class AirportService(pathService: ActorRef) extends Actor with ActorLogging {
+class AirportService(pathService: ActorRef) extends Actor
+  with ActorLogging
+  with ActorService {
 
   var airportsState: Map[String, AirportView] = Map.empty
 
   override def preStart(): Unit = self ! FetchAirportsMessage
 
-  override def receive: Receive = {
+  override def handleMessage: Function[Message, Unit] = {
 
-    case ResolveAirportMessage(requestId, requestParams) =>
+    case ResolveAirportMessage(requestId, requestParams) => {
       // TODO if origin or arrival airport is missed we need to try to find them on another service
       val emptyAirport = AirportView("", "", 0, 0)
       val originAirport = airportsState.getOrElse(requestParams.origin, emptyAirport)
       val arrivalAirport = airportsState.getOrElse(requestParams.arrival, emptyAirport)
       pathService ! BuildPathMessage(requestId, originAirport, arrivalAirport, requestParams)
+    }
 
-    case FetchAirportsMessage =>
+
+    case FetchAirportsMessage => {
       val airportsUrl = "https://raw.githubusercontent.com/jbrooksuk/JSON-Airports/master/airports.json"
 
       val futureAirports = for {
@@ -51,7 +57,10 @@ class AirportService(pathService: ActorRef) extends Actor with ActorLogging {
           case Failure(error) =>
             log.error("An error occurred while getting airports.", error)
         }
+    }
+  }
 
+  override def handleTestMessage: Function[TestMessage, Unit] = {
     case GetAirportsStateMessage =>
       sender() ! GetAirportsStateResponse(airportsState)
   }

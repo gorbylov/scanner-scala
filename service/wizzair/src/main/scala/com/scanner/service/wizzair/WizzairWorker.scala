@@ -3,7 +3,9 @@ package com.scanner.service.wizzair
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import akka.actor.{Actor, ActorLogging}
+import com.scanner.message.core.Message
 import com.scanner.message.wizzair._
+import com.scanner.service.core.actor.ActorService
 import com.scanner.service.core.utils.SequenceUtils.TrySequence
 
 import scala.io.Source
@@ -16,7 +18,10 @@ import com.scanner.service.core.utils.Exceptions._
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class WizzairWorker extends Actor with ActorLogging {
+class WizzairWorker extends Actor
+  with ActorLogging
+  with ActorService {
+
   import WizzairWorker._
 
   val wizzairCurrenciesToISO = Map(
@@ -25,7 +30,9 @@ class WizzairWorker extends Actor with ActorLogging {
     "SFr" -> "CHF", "UAH" -> "UAH"
   )
 
-  override def receive: Receive = {
+
+  override def handleMessage: Function[Message, Unit] = {
+
     case GetWizzairFlightsMessage(origin, arrival, year, month) =>
       val response = flights(origin, arrival, year, month).fold[WizzairResponse](
         error => {
@@ -40,13 +47,13 @@ class WizzairWorker extends Actor with ActorLogging {
   def flights(origin: String, arrival: String, year: Int, month: Int): Try[List[WizzairFlightView]] = {
     val url = s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=$year&month=$month"
     // getting json content and converting to plain object
-    val maybeResponses = for {
+    val tryResponses = for {
       content <- Try(Source.fromURL(url, "UTF-8").mkString) // TODO Future
       json <- parse(content).toTry
       response <- json.as[List[WizzairTimetableResponse]].toTry
     } yield response
     // mapping responses to views
-    maybeResponses.map { responses =>
+    tryResponses.map { responses =>
       responses
         .filter(_.MinimumPrice.isDefined) // TODO filters here doesn't look as a good idea
         .filter{ response =>
