@@ -15,24 +15,16 @@ class FlightsFetcher(
   with ActorLogging
   with ActorService {
 
-  val flightsState: Map[Int, List[FlightView]] = Map.empty
+  var flightsState: Map[Int, List[FlightView]] = Map.empty
 
   override def handleMessage: Function[Message, Unit] = {
     case FetchFlightsForPathMessage(requestId, path, from, to, airlines, currency, OneWay) => {
-      val stepsWithIndexes = path zipWithIndex
-
+      val stepsWithIndexes = path.zipWithIndex
       airlineServices.foreach { case (airlineName, airlineService) =>
         stepsWithIndexes.foreach { case ((origin, arrival), stepIndex) =>
           airlineService ! GetFlightsMessage(stepIndex, stepsWithIndexes.size, origin, arrival, from, to, currency)
         }
       }
-
-//      TODO WTF???
-//      for {
-//        (airlineName, airlineService) <- airlineServices
-//        ((origin, arrival), stepIndex) <- stepsWithIndexes
-//      } yield airlineService ! GetFlightsMessage(stepIndex, stepsWithIndexes.size, origin, arrival, from, to, currency)
-
     }
 
 
@@ -41,20 +33,19 @@ class FlightsFetcher(
   }
 
   override def handleResponse: Function[Response, Unit] = {
-    case GetFlightsResponse(stepIndex, stepsCount, flights) => {
+    case GetFlightsResponse(stepIndex, stepsCount, flights) =>
       val resultFlights = flightsState.get(stepIndex).fold(flights){existedFlights =>
         existedFlights ::: flights
       }
-      flightsState + (stepIndex -> resultFlights)
+      flightsState = flightsState + (stepIndex -> resultFlights)
       if (flightsState.keys.size == stepsCount) {
         // TODO send flights to aggregator
-        context.stop(self)
+        //context.stop(self)
       }
-    }
   }
 
   override def handleTestMessage: Function[TestMessage, Unit] = {
     case GetFlightsStateMessage =>
-      sender() ! flightsState
+      sender() ! GetFlightsStateResponse(flightsState)
   }
 }

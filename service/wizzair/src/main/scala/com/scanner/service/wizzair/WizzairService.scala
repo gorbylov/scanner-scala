@@ -60,11 +60,11 @@ class WizzairService extends Actor
                 flights.map { view =>
                   FlightView(
                     view.flightNumber,
-                    view.origin,
-                    view.arrival,
+                    origin,
+                    arrival,
                     view.departureTime,
                     view.arrivalTime,
-                    "wizzair",
+                    Wizzair,
                     view.price,
                     view.currency
                   )

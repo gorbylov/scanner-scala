@@ -9,8 +9,8 @@ trait ApiView
 
 case class FlightView(
   flightNumber: String,
-  origin: String,
-  arrival: String,
+  origin: Airport,
+  arrival: Airport,
   departureTime: LocalDateTime,
   arrivalTime: LocalDateTime,
   airline: Airline,

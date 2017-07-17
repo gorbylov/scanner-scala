@@ -25,40 +25,56 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
   with BeforeAndAfterAll {
 
   val flightsAggregatorProbe = TestProbe()
-
-  val airlineServiceSelection = mockActorSelection("airlineServiceSelection"){
-    case GetFlightsMessage(stepIndex, stepsCount, origin, arrival, from, to, currency) => {
-      self ! GetFlightsResponse(
-        stepIndex,
-        stepsCount,
-        List(
-          FlightView(
-            "flightNumber",
-            origin.iata,
-            arrival.iata,
-            LocalDateTime.now(),
-            LocalDateTime.now().plusHours(2),
-            Wizzair,
-            100.00,
-            currency
-          )
-        )
-      )
-    }
-  }
-
-  /*val airlineServices = List(Wizzair -> airlineServiceSelection)
-  val flightsFetcher = system.actorOf(Props(classOf[FlightsFetcher], flightsAggregatorProbe.ref, airlineServices), "flightsFetcher")
+  val (airlineServiceSelection, airlineServiceProbe) = mockActorSelection("airline-service")
+  val airlineServices = List(Wizzair -> airlineServiceSelection)
+  val flightsFetcher = system.actorOf(
+    Props(new FlightsFetcher(flightsAggregatorProbe.ref, airlineServices)),
+    "flightsFetcher"
+  )
 
   "FlightsFetcher actor" should {
-    "fetch flights for specified path" in {
+
+    "send message to airline service to get flights for specified paramerers" in {
       val requestId = UUID.randomUUID().toString
       val iev = Airport("IEV", "Kiev", 0.0, 0.0)
       val bud = Airport("BUD", "Budapest", 0.0, 0.0)
       val path = List(iev -> bud)
-      flightsFetcher ! FetchFlightsForPathMessage(requestId, path, LocalDate.now(), LocalDate.now(), Nil, "UAH", OneWay)
+      val from = LocalDate.now()
+      val to = LocalDate.now()
+      val uah = "UAH"
 
+      flightsFetcher ! FetchFlightsForPathMessage(requestId, path, from, to, Nil, uah, OneWay)
+      airlineServiceProbe.expectMsgPF(2 seconds) {
+        case GetFlightsMessage(stepIndex, stepsCount, origin, arrival, fromDate, toDate, currency) =>
+          stepIndex shouldBe 0
+          stepsCount shouldBe path.size
+          origin shouldBe iev
+          arrival shouldBe bud
+          from shouldBe fromDate
+          to shouldBe toDate
+          currency shouldBe uah
+        case _ => fail
+      }
     }
-  }*/
+
+    "receive ...." in {
+      val iev = Airport("IEV", "Kiev", 0.0, 0.0)
+      val bud = Airport("BUD", "Budapest", 0.0, 0.0)
+      val from = LocalDateTime.now()
+      val to = LocalDateTime.now()
+      val price = 100.00
+      val uah = "UAH"
+      val view = FlightView("flightNumber", iev, bud, from, to, Wizzair, price, uah)
+      flightsFetcher ! GetFlightsResponse(0, 3, List(view))
+      flightsFetcher ! GetFlightsResponse(1, 3, List(view))
+      flightsFetcher ! GetFlightsResponse(2, 3, List(view))
+      flightsFetcher ! GetFlightsStateMessage
+      expectMsgPF(2 seconds) {
+        case GetFlightsStateResponse(state) =>
+          state.size shouldBe 3
+        case _ => fail()
+      }
+    }
+  }
 
 }
