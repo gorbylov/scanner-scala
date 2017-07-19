@@ -16,3 +16,6 @@ case class GraphIsEmptyResponse(empty: Boolean) extends ApiTestMessage
 case object GetFlightsStateMessage extends ApiTestMessage
 case class GetFlightsStateResponse(flightsState: Map[Int, List[FlightView]]) extends ApiTestMessage
 
+case object GetFlightsAggregatorStateMessage extends ApiTestMessage
+case class GetFlightsAggregatorStateResponse(flightsState: Map[String, List[List[List[FlightView]]]]) extends ApiTestMessage
+

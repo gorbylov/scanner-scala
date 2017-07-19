@@ -10,6 +10,7 @@ import com.scanner.service.core.actor.ActorService
   */
 class FlightsFetcherPerRequest(
   requestId: String,
+  pathsCount: Int,
   flightsAggregator: ActorRef,
   airlineServices: List[(Airline, ActorSelection)]
 ) extends Actor
@@ -21,7 +22,7 @@ class FlightsFetcherPerRequest(
   override def handleMessage: Function[Message, Unit] = {
     case FetchFlightsForPathMessage(path, from, to, airlines, currency, OneWay) => {
       val stepsWithIndexes = path.zipWithIndex
-      airlineServices.foreach { case (airlineName, airlineService) =>
+      airlineServices.foreach { case (_, airlineService) =>
         stepsWithIndexes.foreach { case ((origin, arrival), stepIndex) =>
           airlineService ! GetFlightsMessage(stepIndex, stepsWithIndexes.size, origin, arrival, from, to, currency)
         }
@@ -43,7 +44,7 @@ class FlightsFetcherPerRequest(
         val steppedFlights = flightsState.toList
           .sortBy { case (idx, _) => idx }
           .map{ case (_, f) => f}
-        flightsAggregator ! AggregateFlights(requestId, steppedFlights)
+        flightsAggregator ! AggregateFlights(requestId, pathsCount, steppedFlights)
         context.stop(self)
       }
   }

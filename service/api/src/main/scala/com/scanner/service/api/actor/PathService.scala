@@ -39,19 +39,19 @@ class PathService(
 
     case BuildPathMessage(requestId, origin, arrival, params) => {
 
-      val flightsFetcherPerRequest = context.actorOf(
-        Props(classOf[FlightsFetcherPerRequest], requestId, flightsAggregator, airlineServices),
-        s"flightsFetcherPerRequest-$requestId"
-      )
-
-      val connections = graph.search(origin, arrival) {
+      val paths = graph.search(origin, arrival) {
         case (airport1, airport2) => haversineDistance(airport1.lat -> airport1.lon, airport2.lat -> airport2.lon)
       }
 
-      connections.foreach{ connection =>
-        val path = connection zip connection.tail
+      val flightsFetcherPerRequest = context.actorOf(
+        Props(classOf[FlightsFetcherPerRequest], requestId, paths.size, flightsAggregator, airlineServices),
+        s"flightsFetcherPerRequest-$requestId"
+      )
+
+      paths.foreach{ path =>
+        val pathByPairs = path zip path.tail
         flightsFetcherPerRequest ! FetchFlightsForPathMessage(
-          path,
+          pathByPairs,
           params.from,
           params.to,
           params.airlines,
