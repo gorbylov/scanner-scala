@@ -39,9 +39,9 @@ class PathService(
 
     case BuildPathMessage(requestId, origin, arrival, params) => {
 
-      val flightsFetcher = context.actorOf(
-        Props(classOf[FlightsFetcher], flightsAggregator, airlineServices),
-        s"flightsFetcher-$requestId"
+      val flightsFetcherPerRequest = context.actorOf(
+        Props(classOf[FlightsFetcherPerRequest], requestId, flightsAggregator, airlineServices),
+        s"flightsFetcherPerRequest-$requestId"
       )
 
       val connections = graph.search(origin, arrival) {
@@ -50,8 +50,7 @@ class PathService(
 
       connections.foreach{ connection =>
         val path = connection zip connection.tail
-        flightsFetcher ! FetchFlightsForPathMessage(
-          requestId,
+        flightsFetcherPerRequest ! FetchFlightsForPathMessage(
           path,
           params.from,
           params.to,

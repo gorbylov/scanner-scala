@@ -10,8 +10,12 @@ import com.scanner.message.core.{Message, Response, TestMessage}
 sealed trait ApiMessage extends Message
 sealed trait ApiResponse extends Response
 
-case class FetchFlightsForPathMessage(
+case class AggregateFlights(
   requestId: String,
+  flights: List[List[FlightView]]
+)
+
+case class FetchFlightsForPathMessage(
   path: List[(Airport, Airport)],
   from: LocalDate,
   to: LocalDate,

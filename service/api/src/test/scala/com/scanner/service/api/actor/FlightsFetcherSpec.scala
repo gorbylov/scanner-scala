@@ -27,14 +27,15 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
   val flightsAggregatorProbe = TestProbe()
   val (airlineServiceSelection, airlineServiceProbe) = mockActorSelection("airline-service")
   val airlineServices = List(Wizzair -> airlineServiceSelection)
+  val requestId = UUID.randomUUID().toString
   val flightsFetcher = system.actorOf(
-    Props(new FlightsFetcher(flightsAggregatorProbe.ref, airlineServices)),
+    Props(new FlightsFetcherPerRequest(requestId, flightsAggregatorProbe.ref, airlineServices)),
     "flightsFetcher"
   )
 
   "FlightsFetcher actor" should {
 
-    "send message to airline service to get flights for specified paramerers" in {
+    "send message to airline service to get flights for specified parameters" in {
       val requestId = UUID.randomUUID().toString
       val iev = Airport("IEV", "Kiev", 0.0, 0.0)
       val bud = Airport("BUD", "Budapest", 0.0, 0.0)
@@ -43,7 +44,7 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
       val to = LocalDate.now()
       val uah = "UAH"
 
-      flightsFetcher ! FetchFlightsForPathMessage(requestId, path, from, to, Nil, uah, OneWay)
+      flightsFetcher ! FetchFlightsForPathMessage(path, from, to, Nil, uah, OneWay)
       airlineServiceProbe.expectMsgPF(2 seconds) {
         case GetFlightsMessage(stepIndex, stepsCount, origin, arrival, fromDate, toDate, currency) =>
           stepIndex shouldBe 0
@@ -57,7 +58,7 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
       }
     }
 
-    "receive ...." in {
+    "receive 3 responses from airline services, collect data and send to FlightsAggregator" in {
       val iev = Airport("IEV", "Kiev", 0.0, 0.0)
       val bud = Airport("BUD", "Budapest", 0.0, 0.0)
       val from = LocalDateTime.now()
@@ -69,9 +70,10 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
       flightsFetcher ! GetFlightsResponse(1, 3, List(view))
       flightsFetcher ! GetFlightsResponse(2, 3, List(view))
       flightsFetcher ! GetFlightsStateMessage
-      expectMsgPF(2 seconds) {
-        case GetFlightsStateResponse(state) =>
-          state.size shouldBe 3
+      flightsAggregatorProbe.expectMsgPF(2 seconds) {
+        case AggregateFlights(actualRequestId, flights) =>
+          actualRequestId shouldBe requestId
+          flights.size shouldBe 3
         case _ => fail()
       }
     }

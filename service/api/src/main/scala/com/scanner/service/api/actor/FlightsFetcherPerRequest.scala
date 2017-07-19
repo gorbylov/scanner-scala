@@ -8,7 +8,8 @@ import com.scanner.service.core.actor.ActorService
 /**
   * Created by igorbylov on 28.06.17.
   */
-class FlightsFetcher(
+class FlightsFetcherPerRequest(
+  requestId: String,
   flightsAggregator: ActorRef,
   airlineServices: List[(Airline, ActorSelection)]
 ) extends Actor
@@ -18,7 +19,7 @@ class FlightsFetcher(
   var flightsState: Map[Int, List[FlightView]] = Map.empty
 
   override def handleMessage: Function[Message, Unit] = {
-    case FetchFlightsForPathMessage(requestId, path, from, to, airlines, currency, OneWay) => {
+    case FetchFlightsForPathMessage(path, from, to, airlines, currency, OneWay) => {
       val stepsWithIndexes = path.zipWithIndex
       airlineServices.foreach { case (airlineName, airlineService) =>
         stepsWithIndexes.foreach { case ((origin, arrival), stepIndex) =>
@@ -28,7 +29,7 @@ class FlightsFetcher(
     }
 
 
-    case FetchFlightsForPathMessage(requestId, path, from, to, airlines, currency, BothWays) =>
+    case FetchFlightsForPathMessage(path, from, to, airlines, currency, BothWays) =>
       log.info("FlightsAggregator.GetFlightsMessage not implemented yet")
   }
 
@@ -39,8 +40,11 @@ class FlightsFetcher(
       }
       flightsState = flightsState + (stepIndex -> resultFlights)
       if (flightsState.keys.size == stepsCount) {
-        // TODO send flights to aggregator
-        //context.stop(self)
+        val steppedFlights = flightsState.toList
+          .sortBy { case (idx, _) => idx }
+          .map{ case (_, f) => f}
+        flightsAggregator ! AggregateFlights(requestId, steppedFlights)
+        context.stop(self)
       }
   }
 
