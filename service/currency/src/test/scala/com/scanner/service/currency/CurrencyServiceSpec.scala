@@ -3,7 +3,7 @@ package com.scanner.service.currency
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import com.scanner.message.currency.{ConvertCurrencyMessage, ConvertCurrencyResponse, UpdateCurrencyStateMessage}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -15,12 +15,16 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
   with ImplicitSender
   with WordSpecLike
   with Matchers
+  with BeforeAndAfterAll
   with CurrencyConfig {
+
+
+  override def afterAll = TestKit.shutdownActorSystem(system)
 
   "CurrencyService actor" should {
 
     val actorRef = TestActorRef(new CurrencyService(system.scheduler, schedulerInterval seconds) {
-      override def updateState(): Map[String, BigDecimal] = Map("EUR" -> 2, "UAH" -> 3) // preventing api calling
+      override def updateState(): Unit = this.state = Map("EUR" -> 2, "UAH" -> 3) // TODO try to rewrite the test
     })
 
     "receive converted value for correct currencies" in {

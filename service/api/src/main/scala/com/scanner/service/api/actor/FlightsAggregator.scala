@@ -1,6 +1,6 @@
 package com.scanner.service.api.actor
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.scanner.message.api._
 import com.scanner.message.core.{Message, TestMessage}
 import com.scanner.service.core.actor.ActorService
@@ -36,4 +36,8 @@ class FlightsAggregator(apiService: ActorRef) extends Actor
     case GetFlightsAggregatorStateMessage =>
       sender() ! GetFlightsAggregatorStateResponse(state)
   }
+}
+
+object FlightsAggregator {
+  def props(apiService: ActorRef): Props = Props(new FlightsAggregator(apiService))
 }

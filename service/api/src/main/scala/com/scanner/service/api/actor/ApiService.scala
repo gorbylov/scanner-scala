@@ -37,7 +37,7 @@ class ApiService(airportService: ActorRef) extends Actor
     case RequestResponse(requestId, flights) =>
       requestsState.get(requestId).foreach { ctx =>
         requestsState = requestsState - requestId
-        ctx.complete(flights)
+        ctx.complete(flights.mkString) // TODO
       }
 
   }

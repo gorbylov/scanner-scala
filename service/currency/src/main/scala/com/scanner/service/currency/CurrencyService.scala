@@ -23,7 +23,7 @@ class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Ac
   with ActorLogging
   with ActorService {
 
-  scheduler.schedule(interval, interval, self, UpdateCurrencyStateMessage)
+  scheduler.schedule(0 seconds, interval, self, UpdateCurrencyStateMessage)
 
   var state: Map[String, BigDecimal] = Map.empty
 

@@ -19,7 +19,7 @@ case class AggregateFlights(
   requestId: String,
   pathsCount:Int,
   flights: List[List[FlightView]]
-)
+) extends Message
 
 case class FetchFlightsForPathMessage(
   path: List[(Airport, Airport)],

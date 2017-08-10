@@ -63,6 +63,7 @@ lazy val message = module(
 lazy val clusterSeed = service(
   name = "cluster-seed",
   location = "cluster-seed",
+
   dependencies = Seq(message),
   libs = Seq(akkaActor, akkaCluster)
 )
@@ -83,7 +84,7 @@ lazy val currency = service(
 lazy val api = service(
   name = "api",
   location = "service/api",
-  dependencies = Seq(core, message),
+  dependencies = Seq(core % "compile->compile;test->test", message),
   libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
 )
 lazy val wizzair = service(

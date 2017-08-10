@@ -1,8 +1,7 @@
 package com.scanner.service.core.actor
 
-import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Props}
-import akka.testkit.{TestActorRef, TestProbe}
+import akka.testkit.TestProbe
 
 /**
   * Created by igorbylov on 13.07.17.

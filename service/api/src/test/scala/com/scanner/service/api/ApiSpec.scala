@@ -9,6 +9,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestActorRef
 import com.scanner.message.api._
 import com.scanner.service.api.marshal.ApiUnmarshallers._
+import com.scanner.service.api.message.RequestMessage
 import com.scanner.service.core.marshal.BasicUnmarshallers._
 import io.circe.generic.auto._
 import org.scalatest.{Matchers, WordSpec}
@@ -28,7 +29,7 @@ class ApiSpec extends WordSpec with Matchers with ScalatestRouteTest with Api {
 
       val now = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
       val nowPlusMonth = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-      Get(s"/scan?origin=ORG&arrival=ARV&start=$now&end=$nowPlusMonth&airline=wizzair&currency=UAH") ~> routes(testApiService) ~> check {
+      Get(s"/scan?origin=ORG&arrival=ARV&from=$now&to=$nowPlusMonth&airline=wizzair&currency=UAH&direction=one") ~> routes(testApiService) ~> check {
         status shouldBe StatusCodes.OK
       }
 
@@ -38,7 +39,9 @@ class ApiSpec extends WordSpec with Matchers with ScalatestRouteTest with Api {
 
   val testApiService = TestActorRef(new Actor() {
     override def receive: Receive = {
-      case oneWay: GetFlightsMessage => sender ! GetFlightsResponse(0, 0, List.empty)
+      case RequestMessage(ctx, params) =>
+        // TODO check params
+        ctx.complete(StatusCodes.OK)
     }
   })
 

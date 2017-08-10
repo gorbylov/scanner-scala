@@ -18,9 +18,7 @@ class WizzairWorkerSpec extends TestKit(ActorSystem("testSystem"))
                                 with Matchers
                                 with BeforeAndAfterAll {
 
-  override def afterAll {
-    TestKit.shutdownActorSystem(system)
-  }
+  override def afterAll = TestKit.shutdownActorSystem(system)
 
   val wizzairWorker = TestActorRef[WizzairWorker]
 

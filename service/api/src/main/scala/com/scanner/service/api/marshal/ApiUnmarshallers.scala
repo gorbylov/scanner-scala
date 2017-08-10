@@ -18,7 +18,7 @@ object ApiUnmarshallers {
       })
   }
 
-  implicit def directionUnmarshaller = new FromStringUnmarshaller[Direction] {
+  implicit def directionUnmarshaller = new FromStringUnmarshaller[Direction] { // TODO typeclass
     override def apply(value: String)(implicit ec: ExecutionContext, materializer: Materializer): Future[Direction] =
       Future(value.toLowerCase match {
         case "one" => OneWay

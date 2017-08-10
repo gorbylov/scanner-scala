@@ -24,12 +24,14 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
   with Matchers
   with BeforeAndAfterAll {
 
+  override def afterAll = TestKit.shutdownActorSystem(system)
+
   val flightsAggregatorProbe = TestProbe()
   val (airlineServiceSelection, airlineServiceProbe) = mockActorSelection("airline-service")
   val airlineServices = List(Wizzair -> airlineServiceSelection)
   val requestId = UUID.randomUUID().toString
   val flightsFetcher = system.actorOf(
-    Props(new FlightsFetcherPerRequest(requestId, flightsAggregatorProbe.ref, airlineServices)),
+    Props(new FlightsFetcherPerRequest(requestId, 3, flightsAggregatorProbe.ref, airlineServices)),
     "flightsFetcher"
   )
 
@@ -71,7 +73,7 @@ class FlightsFetcherSpec extends TestKit(ActorSystem("testSystem"))
       flightsFetcher ! GetFlightsResponse(2, 3, List(view))
       flightsFetcher ! GetFlightsStateMessage
       flightsAggregatorProbe.expectMsgPF(2 seconds) {
-        case AggregateFlights(actualRequestId, flights) =>
+        case AggregateFlights(actualRequestId, 3, flights) =>
           actualRequestId shouldBe requestId
           flights.size shouldBe 3
         case _ => fail()

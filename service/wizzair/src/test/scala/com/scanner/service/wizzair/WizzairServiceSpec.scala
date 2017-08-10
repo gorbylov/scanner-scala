@@ -15,9 +15,7 @@ class WizzairServiceSpec extends TestKit(ActorSystem("testSystem"))
                                  with WordSpecLike
                                  with Matchers
                                  with BeforeAndAfterAll {
-  override def afterAll {
-    TestKit.shutdownActorSystem(system)
-  }
+  override def afterAll = TestKit.shutdownActorSystem(system)
 
   val wizzairService = TestActorRef[WizzairService]
 

@@ -10,7 +10,7 @@ import com.scanner.service.core.actor.ActorService
   */
 class FlightsFetcherPerRequest(
   requestId: String,
-  pathsCount: Int,
+  pathsCount: Int, // TODO try to get rid of requestId and pathCount from constructor
   flightsAggregator: ActorRef,
   airlineServices: List[(Airline, ActorSelection)]
 ) extends Actor
