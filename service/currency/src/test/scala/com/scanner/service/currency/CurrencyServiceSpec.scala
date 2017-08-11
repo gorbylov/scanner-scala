@@ -3,9 +3,11 @@ package com.scanner.service.currency
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import com.scanner.message.currency.{ConvertCurrencyMessage, ConvertCurrencyResponse, UpdateCurrencyStateMessage}
+import com.scanner.service.currency.actor.CurrencyService
+import org.scalamock.proxy.ProxyMockFactory
+import org.scalamock.scalatest.proxy.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
@@ -16,6 +18,7 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
   with WordSpecLike
   with Matchers
   with BeforeAndAfterAll
+  with ProxyMockFactory
   with CurrencyConfig {
 
 
@@ -23,7 +26,9 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
 
   "CurrencyService actor" should {
 
-    val actorRef = TestActorRef(new CurrencyService(system.scheduler, schedulerInterval seconds) {
+    val fakeApilayerService = mock[ApilayerService]
+
+    val actorRef = TestActorRef(new CurrencyService() {
       override def updateState(): Unit = this.state = Map("EUR" -> 2, "UAH" -> 3) // TODO try to rewrite the test
     })
 

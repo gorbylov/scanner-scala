@@ -1,29 +1,21 @@
-package com.scanner.service.currency
+package com.scanner.service.currency.actor
 
-import akka.actor.{Actor, ActorLogging, Scheduler}
+import akka.actor.{Actor, ActorLogging, Props}
 import com.scanner.message.core.Message
 import com.scanner.message.currency._
 import com.scanner.service.core.actor.ActorService
-import com.scanner.service.currency.CurrencyService.CurrencyResponse
-import io.circe.generic.auto._
-import io.circe.parser._
+import com.scanner.service.currency.ApilayerService
 
-
-import scala.io.Source
-import scala.util.{Failure, Success}
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 /**
   * Created by Iurii on 06-03-2017.
   */
-class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Actor
+class CurrencyService(apilayerService: ApilayerService) extends Actor
   with ActorLogging
   with ActorService {
-
-  scheduler.schedule(0 seconds, interval, self, UpdateCurrencyStateMessage)
 
   var state: Map[String, BigDecimal] = Map.empty
 
@@ -51,26 +43,16 @@ class CurrencyService(scheduler: Scheduler, interval: FiniteDuration) extends Ac
   def calculateCoefficient(from: String, to: String): Option[BigDecimal] = convertCurrency(from, to, 1)
 
   def updateState(): Unit = {
-    val futureCurrencyResponse = for {
-      content <- Future(Source.fromURL(CurrencyService.apiUrl, "UTF-8").mkString)
-      json <- Future.fromTry(parse(content).toTry)
-      currencyResponse <- Future.fromTry(json.as[CurrencyResponse].toTry)
-    } yield currencyResponse
-
-    futureCurrencyResponse.onComplete{
+    apilayerService.fetchCurrencies().onComplete{
       case Success(currencyResponse) =>
         state = currencyResponse.quotes.map{case (key, value) => key.substring(3) -> value}
       case Failure(error) =>
         log.error(s"An error occurred while fetching currencies state: $error")
     }
   }
-
 }
 
 object CurrencyService {
-  val accessKey = "304ab1caae3a0cff5303cab9619d6140&format=1"
-  val apiUrl = s"http://www.apilayer.net/api/live?access_key=$accessKey"
-
-  case class CurrencyResponse(quotes: Map[String, BigDecimal])
+  def props(): Props = Props(new CurrencyService(new ApilayerService))
 }
 

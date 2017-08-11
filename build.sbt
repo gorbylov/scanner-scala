@@ -45,6 +45,7 @@ val typeSafeLogs = "com.typesafe.scala-logging" % "scala-logging-slf4j_2.11" % "
 //test
 val akkaTest = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+val scalaMock = "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % "test"
 val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % "10.0.4" % "test"
 
 // Project
@@ -63,7 +64,6 @@ lazy val message = module(
 lazy val clusterSeed = service(
   name = "cluster-seed",
   location = "cluster-seed",
-
   dependencies = Seq(message),
   libs = Seq(akkaActor, akkaCluster)
 )
@@ -79,7 +79,7 @@ lazy val currency = service(
   name = "currency",
   location = "service/currency",
   dependencies = Seq(core, message),
-  libs = Seq(scalaTest, akkaTest) ++ circeSuite
+  libs = Seq(scalaTest, scalaMock, akkaTest) ++ circeSuite
 )
 lazy val api = service(
   name = "api",
