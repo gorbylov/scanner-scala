@@ -1,18 +1,14 @@
 package com.scanner.service.currency.actor
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.scanner.message.core.Message
+import com.scanner.message.core.{Message, TestMessage}
 import com.scanner.message.currency._
 import com.scanner.service.core.actor.ActorService
 import com.scanner.service.currency.ApilayerService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
-/**
-  * Created by Iurii on 06-03-2017.
-  */
 class CurrencyService(apilayerService: ApilayerService) extends Actor
   with ActorLogging
   with ActorService {
@@ -29,8 +25,11 @@ class CurrencyService(apilayerService: ApilayerService) extends Actor
       val convertedCurrencyValue = convertCurrency(from, to, value)
       sender ! ConvertCurrencyResponse(convertedCurrencyValue)
 
-    case UpdateCurrencyStateMessage =>
-      updateState()
+    case UpdateCurrencyStateMessage => updateState()
+  }
+
+  override def handleTestMessage: Function[TestMessage, Unit] = {
+    case GetCurrencyStateMessage => sender() ! GetCurrencyStateResponse(state)
   }
 
   def convertCurrency(from: String, to: String, value: BigDecimal): Option[BigDecimal] = {

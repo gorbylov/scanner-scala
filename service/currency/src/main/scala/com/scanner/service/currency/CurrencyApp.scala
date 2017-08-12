@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by Iurii on 06-03-2017.
@@ -19,5 +19,5 @@ object CurrencyApp extends App with CurrencyConfig {
 
   log.info(s"Starting $serviceName service.")
   val currencyService = system.actorOf(CurrencyService.props(), serviceName)
-  //system.scheduler.schedule(0 seconds, schedulerInterval, currencyService, UpdateCurrencyStateMessage)
+  system.scheduler.schedule(0 seconds, schedulerInterval hour, currencyService, UpdateCurrencyStateMessage)
 }

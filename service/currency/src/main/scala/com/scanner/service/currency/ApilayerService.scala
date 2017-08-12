@@ -7,6 +7,8 @@ import io.circe.parser.parse
 import scala.concurrent.Future
 import scala.io.Source
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class ApilayerService {
 
   def fetchCurrencies(): Future[CurrencyResponse] = {
