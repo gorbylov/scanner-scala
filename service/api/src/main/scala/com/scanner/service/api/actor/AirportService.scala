@@ -1,6 +1,6 @@
 package com.scanner.service.api.actor
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.scanner.message.api._
 import com.scanner.message.core.{Message, TestMessage}
 import com.scanner.service.api.actor.AirportService.AirportDto
@@ -37,6 +37,7 @@ class AirportService(pathService: ActorRef) extends Actor
 
 
     case FetchAirportsMessage => {
+      // TODO move it to separated class for mock testing
       val airportsUrl = "https://raw.githubusercontent.com/jbrooksuk/JSON-Airports/master/airports.json"
 
       val futureAirports = for {
@@ -68,6 +69,9 @@ class AirportService(pathService: ActorRef) extends Actor
 }
 
 object AirportService {
+
+  def props(pathService: ActorRef): Props = Props(new AirportService(pathService))
+
   case class AirportDto(
     iata: String,
     name: Option[String],

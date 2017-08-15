@@ -4,13 +4,11 @@ import akka.actor.{ActorSelection, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.scanner.message.api.Wizzair
 import com.scanner.service.api.actor._
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -25,41 +23,9 @@ object ApiApp extends App with Api with ApiConfig{
   implicit val materializer = ActorMaterializer()
   implicit val timeout = Timeout(10 seconds)
 
-  val airlineServices = List(
-    Wizzair -> locateRemoteActor(wizzairConfig)
-  )
-
-  airlineServices.head._2.resolveOne(5 seconds).onComplete{
-    case Success(ref) =>
-      log.info("oye")
-    case Failure(error) =>
-      log.info(error.getMessage)
-  }
-
-  val flightsAggregator = system.actorOf(
-    Props(classOf[FlightsAggregator]),
-    "flightsAggregator"
-  )
-
-  val pathService = system.actorOf(
-    Props(classOf[PathService], flightsAggregator, airlineServices),
-    "pathService"
-  )
-
-  val airportService = system.actorOf(
-    Props(classOf[AirportService], pathService),
-    "airportService"
-  )
-
-  val apiService = system.actorOf(
-    Props(classOf[ApiService], airportService),
-    "apiService"
-  )
+  val apiService = system.actorOf(ApiService.props(), "apiService")
 
   Http().bindAndHandle(routes(apiService), httpInterface, httpPort)
-
-  def locateActor(host: String, port: String, name: String): ActorSelection =
-    system.actorSelection(s"akka.tcp://scanner@$host:$port/user/$name")
 
   def locateRemoteActor(actorAddressConfig: Config): ActorSelection = {
     val host = actorAddressConfig.getString("host")

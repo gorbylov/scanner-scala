@@ -20,7 +20,7 @@ class ApiServiceSpec extends TestKit(ActorSystem("testSystem"))
   val airportService = TestProbe()
 
   // TODO find out how to test/mock actor selection
-  val apiService = TestActorRef[ApiService](Props(classOf[ApiService], airportService.ref), "apiService")
+  val apiService = TestActorRef[ApiService](ApiService.props(), "apiService")
 
   "ApiService" should  {
     "build connections graph" in {

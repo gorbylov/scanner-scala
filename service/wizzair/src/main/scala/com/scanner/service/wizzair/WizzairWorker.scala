@@ -2,7 +2,7 @@ package com.scanner.service.wizzair
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, Props}
 import com.scanner.message.core.Message
 import com.scanner.message.wizzair._
 import com.scanner.service.core.actor.ActorService
@@ -96,6 +96,9 @@ case class WizzairFlightInfoDto(
 )
 
 object WizzairWorker {
+
+  def props(): Props = Props(new WizzairWorker)
+
   val API_ROOT = "https://cdn.static.wizzair.com"
   val TIMETABLE_ROOT = s"$API_ROOT/en-GB/TimeTableAjax"
   val CONN_TIMEOUT = 10000

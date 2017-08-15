@@ -1,6 +1,6 @@
 package com.scanner.service.api.actor
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, Props}
 import com.scanner.message.api._
 import com.scanner.message.core.{Message, Response, TestMessage}
 import com.scanner.service.core.actor.ActorService
@@ -53,4 +53,14 @@ class FlightsFetcherPerRequest(
     case GetFlightsStateMessage =>
       sender() ! GetFlightsStateResponse(flightsState)
   }
+}
+
+object FlightsFetcherPerRequest{
+  def props(
+    requestId: String,
+    pathsCount: Int,
+    flightsAggregator: ActorRef,
+    airlineServices: List[(Airline, ActorSelection)]
+  ): Props =
+    Props(new FlightsFetcherPerRequest(requestId, pathsCount, flightsAggregator, airlineServices))
 }

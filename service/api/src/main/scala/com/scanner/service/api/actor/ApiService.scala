@@ -2,8 +2,8 @@ package com.scanner.service.api.actor
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
-import com.scanner.message.api.{RequestResponse, ResolveAirportMessage}
+import akka.actor.{Actor, ActorLogging, Props}
+import com.scanner.message.api.{RequestResponse, ResolveAirportMessage, Wizzair}
 import com.scanner.message.core.{Message, Response}
 import com.scanner.service.api.ApiConfig
 import com.scanner.service.api.http.ImperativeRequestContext
@@ -19,10 +19,15 @@ import com.scanner.service.api.marshal.ApiUnmarshallers._
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class ApiService(airportService: ActorRef) extends Actor
+class ApiService extends Actor
   with ActorLogging
   with ActorService
   with ApiConfig {
+
+  val airlineServices = List(Wizzair -> locateRemoteActor(wizzairConfig))
+  val flightsAggregator = context.actorOf(FlightsAggregator.props(self), "flightsAggregator")
+  val pathService = context.actorOf(PathService.props(flightsAggregator, airlineServices), "pathService")
+  val airportService = context.actorOf(AirportService.props(pathService), "airportService")
 
   var requestsState: Map[String, ImperativeRequestContext] = Map.empty
 
@@ -39,6 +44,9 @@ class ApiService(airportService: ActorRef) extends Actor
         requestsState = requestsState - requestId
         ctx.complete(flights.mkString) // TODO
       }
-
   }
+}
+
+object ApiService {
+  def props(): Props = Props(new ApiService())
 }

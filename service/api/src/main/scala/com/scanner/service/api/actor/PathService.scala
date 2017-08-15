@@ -44,11 +44,11 @@ class PathService(
       }
 
       val flightsFetcherPerRequest = context.actorOf(
-        Props(classOf[FlightsFetcherPerRequest], requestId, paths.size, flightsAggregator, airlineServices),
+        FlightsFetcherPerRequest.props(requestId, paths.size, flightsAggregator, airlineServices),
         s"flightsFetcherPerRequest-$requestId"
       )
 
-      paths.foreach{ path =>
+      paths.take(1).foreach{ path => // TODO temporary takes just one path
         val pathByPairs = path zip path.tail
         flightsFetcherPerRequest ! FetchFlightsForPathMessage(
           pathByPairs,
@@ -88,4 +88,9 @@ class PathService(
     case GraphIsEmptyMessage =>
       sender() ! GraphIsEmptyResponse(graph.isEmpty())
   }
+}
+
+object PathService {
+  def props(flightsAggregator: ActorRef, airlineServices: List[(Airline, ActorSelection)]): Props =
+    Props(new PathService(flightsAggregator, airlineServices))
 }

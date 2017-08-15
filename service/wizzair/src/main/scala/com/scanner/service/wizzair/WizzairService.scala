@@ -30,7 +30,7 @@ class WizzairService extends Actor
 
   implicit val askTimeout = Timeout(10 seconds)
   val wizzairRouter: ActorRef = context.actorOf(
-    Props[WizzairWorker].withRouter(RoundRobinPool(5)),
+    WizzairWorker.props().withRouter(RoundRobinPool(5)),
     "wizzairRouter"
   )
 
@@ -90,7 +90,10 @@ class WizzairService extends Actor
 }
 
 object WizzairService {
-  val apiVersion = "6.0.3" // TODO find out how to get api version
+
+  def props(): Props = Props(new WizzairService())
+
+  val apiVersion = "6.2.2" // TODO find out how to get api version
   val apiRoot = s"https://be.wizzair.com/$apiVersion/Api"
 
   case class WizzairCities(cities: List[WizzairCity])

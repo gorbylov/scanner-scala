@@ -21,10 +21,7 @@ class PathServiceSpec extends TestKit(ActorSystem("testSystem"))
   val flightsAgregatorProbe = TestProbe()
   val airlineService = system.actorOf(Props(classOf[EchoActor]), "airlineService")
   val airlineServices = List(Wizzair -> system.actorSelection("/user/airlineService")) // TODO mock actor selection behavior
-  val pathService = system.actorOf(
-    Props(classOf[PathService], flightsAgregatorProbe.ref, airlineServices),
-    "testPathService"
-  )
+  val pathService = system.actorOf(PathService.props(flightsAgregatorProbe.ref, airlineServices), "testPathService")
 
   "PathService actor" should {
     "build graph" in {

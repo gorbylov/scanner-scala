@@ -13,9 +13,6 @@ object WizzairApp extends App with WizzairConfig {
   implicit val system = ActorSystem(systemName)
 
   log.info(s"Starting $serviceName service.")
-  val ref = system.actorOf(
-    Props(classOf[WizzairService]),
-    serviceName
-  )
+  val ref = system.actorOf(WizzairService.props(), serviceName)
   log.info(ref.path.name)
 }

@@ -21,10 +21,7 @@ class AirportServiceSpec extends TestKit(ActorSystem("testSystem"))
   override def afterAll = TestKit.shutdownActorSystem(system)
 
   val pathServiceProbe = TestProbe()
-  val airportService: ActorRef = system.actorOf(
-    Props(classOf[AirportService], pathServiceProbe.ref),
-    "testAirportService"
-  )
+  val airportService: ActorRef = system.actorOf(AirportService.props(pathServiceProbe.ref), "testAirportService")
 
   "AirportService actor" should  {
     "fetch all airports, save result to state and send it to PathService actor" in {
