@@ -91,5 +91,5 @@ lazy val wizzair = service(
   name = "wizzair",
   location = "service/wizzair",
   dependencies = Seq(core, message),
-  libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
+  libs = Seq(scalajHttp, scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
 )

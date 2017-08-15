@@ -12,12 +12,15 @@ import com.scanner.service.core.actor.ActorService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import com.scanner.service.core.utils.Dates._
+import com.scanner.service.core.utils.Exceptions.ExceptionUtils
 import com.scanner.service.core.utils.SequenceUtils._
 
 import scala.concurrent.Future
 import scala.io.Source
 import io.circe.generic.auto._
 import io.circe.parser._
+
+import scala.util.{Failure, Success}
 
 /**
   * Created by IGorbylov on 04.04.2017.
@@ -30,7 +33,7 @@ class WizzairService extends Actor
 
   implicit val askTimeout = Timeout(10 seconds)
   val wizzairRouter: ActorRef = context.actorOf(
-    WizzairWorker.props().withRouter(RoundRobinPool(5)),
+    WizzairWorker.props().withRouter(RoundRobinPool(5)), // TODO move routers count to config
     "wizzairRouter"
   )
 
@@ -72,7 +75,12 @@ class WizzairService extends Actor
             }
         }
         .map(flights => GetFlightsResponse(stepIndex, stepsCount, flights))
-        .pipeTo(currentSender)
+        .onComplete{
+          case Success(response) =>
+            currentSender ! response
+          case Failure(error) =>
+            log.error(error.mkString())
+        }
   }
 
   def fetchWizzairConnections(): Future[GetConnectionsResponse] = {
@@ -93,7 +101,7 @@ object WizzairService {
 
   def props(): Props = Props(new WizzairService())
 
-  val apiVersion = "6.2.2" // TODO find out how to get api version
+  val apiVersion = "6.3.0" // TODO find out how to get api version https://wizzair.com/static/metadata.json
   val apiRoot = s"https://be.wizzair.com/$apiVersion/Api"
 
   case class WizzairCities(cities: List[WizzairCity])

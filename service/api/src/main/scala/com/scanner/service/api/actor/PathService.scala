@@ -41,15 +41,15 @@ class PathService(
 
       val paths = graph.search(origin, arrival) {
         case (airport1, airport2) => haversineDistance(airport1.lat -> airport1.lon, airport2.lat -> airport2.lon)
-      }
+      }.take(1) // TODO temporary takes just one path
 
       val flightsFetcherPerRequest = context.actorOf(
         FlightsFetcherPerRequest.props(requestId, paths.size, flightsAggregator, airlineServices),
         s"flightsFetcherPerRequest-$requestId"
       )
 
-      paths.take(1).foreach{ path => // TODO temporary takes just one path
-        val pathByPairs = path zip path.tail
+      paths.foreach{ path =>
+        val pathByPairs = path zip path.tail // List(IEV, BUD, KTW, LIV) => List((IEV, BUD), (BUD, KTW), (KTW, LIV))
         flightsFetcherPerRequest ! FetchFlightsForPathMessage(
           pathByPairs,
           params.from,

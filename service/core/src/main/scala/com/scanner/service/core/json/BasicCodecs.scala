@@ -11,11 +11,12 @@ import io.circe.{Decoder, Encoder, HCursor}
   * Created by IGorbylov on 27.03.2017.
   */
 object BasicCodecs {
-  // java.time
+
   implicit def localDateTimeEncoder: Encoder[LocalDateTime] =
     (a: LocalDateTime) => a.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).asJson
   implicit def localDateTimeDecoder: Decoder[LocalDateTime] =
     (c: HCursor) => c.as[String].map(LocalDateTime.parse(_, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+
   implicit def localDateEncoder: Encoder[LocalDate] =
     (a: LocalDate) => a.toString.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")).asJson
   implicit def localDateDecoder: Decoder[LocalDate] =

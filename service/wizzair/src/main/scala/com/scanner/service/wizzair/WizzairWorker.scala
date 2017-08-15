@@ -1,19 +1,22 @@
 package com.scanner.service.wizzair
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.LocalDateTime
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.scanner.message.core.Message
 import com.scanner.message.wizzair._
 import com.scanner.service.core.actor.ActorService
-import com.scanner.service.core.utils.SequenceUtils.TrySequence
-
-import scala.io.Source
-import scala.util.Try
 import io.circe.generic.auto._
 import io.circe.parser._
 import com.scanner.service.wizzair.json.WizzairCodecs._
-import com.scanner.service.core.utils.Exceptions._
+import com.scanner.service.wizzair.WizzairService.apiRoot
+import com.scanner.service.core.utils.Exceptions.ExceptionUtils
+
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
+import scalaj.http.Http
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by IGorbylov on 04.04.2017.
@@ -22,85 +25,92 @@ class WizzairWorker extends Actor
   with ActorLogging
   with ActorService {
 
-  import WizzairWorker._
-
-  val wizzairCurrenciesToISO = Map(
-    "₪" -> "ILS", "€" -> "EUR", "£" -> "GBP", "kr" -> "NOK", "zł" -> "PLN", "Kč" -> "CZK",
-    "Ft" -> "HUF", "KM" -> "BAM", "MKD" -> "MKD", "din" -> "RSD", "lv" -> "BGN", "lei" -> "RON",
-    "SFr" -> "CHF", "UAH" -> "UAH"
-  )
-
-
   override def handleMessage: Function[Message, Unit] = {
 
-    case GetWizzairFlightsMessage(origin, arrival, year, month) =>
-      val response = flights(origin, arrival, year, month).fold[WizzairResponse](
-        error => {
-          log.error(s"An error occurred while processing wizzair flights\n${error.mkString()}")
-          WizzairFailure(error, "message")
-        },
-        flights => GetWizzairFlightsResponse(flights)
-      )
-      sender ! response
+    case GetWizzairFlightsMessage(origin, arrival, year, month) => // TODO send LocalDate instead of year and month
+      val currentSender = sender()
+      flights(origin, arrival, year, month)
+        .map(GetWizzairFlightsResponse)
+        .onComplete{
+          case Success(response) =>
+            currentSender ! response
+          case Failure(error) =>
+            log.error(error.mkString())
+        }
   }
 
-  def flights(origin: String, arrival: String, year: Int, month: Int): Try[List[WizzairFlightView]] = {
-    val url = s"$TIMETABLE_ROOT?departureIATA=$origin&arrivalIATA=$arrival&year=$year&month=$month"
+  def flights(origin: String, arrival: String, year: Int, month: Int): Future[List[WizzairFlightView]] = {
+    val data = s"""
+      |{
+      |  "flightList": [
+      |    {
+      |      "departureStation": "$origin",
+      |      "arrivalStation": "$arrival",
+      |      "from": "$year-$month-01",
+      |      "to": "$year-$month-28"
+      |    },
+      |    {
+      |      "departureStation": "$arrival",
+      |      "arrivalStation": "$origin",
+      |      "from": "$year-$month-01",
+      |      "to": "$year-$month-28"
+      |    }
+      |  ],
+      |  "priceType": "regular"
+      |}
+    """.stripMargin
+
+
+
     // getting json content and converting to plain object
-    val tryResponses = for {
-      content <- Try(Source.fromURL(url, "UTF-8").mkString) // TODO Future
-      json <- parse(content).toTry
-      response <- json.as[List[WizzairTimetableResponse]].toTry
+    val futureResponses = for {
+      content <- Future(Http(s"$apiRoot/search/timetable").method("POST").postData(data).header("Content-Type", "application/json").asString.body)
+      json <- Future.fromTry(parse(content).toTry)
+      response <- Future.fromTry(json.as[WizzairTimetableResponse].toTry)
     } yield response
     // mapping responses to views
-    tryResponses.map { responses =>
-      responses
-        .filter(_.MinimumPrice.isDefined) // TODO filters here doesn't look as a good idea
-        .filter{ response =>
-          val result = wizzairCurrenciesToISO.contains(response.MinimumPrice.get.replaceAll("[0-9.,]", "").trim)
-          if (!result) log.error(s"Unknown currency ${response.MinimumPrice.get}")
-          result
-        }
-        .map { response =>
-          response.Flights.map {
-            case WizzairFlightInfoDto(carrierCode, flightNumber, depTime, arrTime) =>
-              WizzairFlightView(
-                s"$carrierCode $flightNumber",
-                response.DepartureStationCode,
-                response.ArrivalStationCode,
-                LocalDateTime.of(response.Date, depTime),
-                LocalDateTime.of(response.Date, arrTime),
-                BigDecimal(response.MinimumPrice.get.replaceAll("[^0-9.]", "")),
-                wizzairCurrenciesToISO(response.MinimumPrice.get.replaceAll("[0-9.,]", "").trim)
-              )
-          }
-        }
+    futureResponses.map { responses =>
+      for {
+        flightDto <- responses.outboundFlights
+        date <- flightDto.departureDates
+      } yield WizzairFlightView(
+        "empty",
+        flightDto.departureStation,
+        flightDto.arrivalStation,
+        date,
+        date, // TODO find out how to get arrival date
+        flightDto.price.amount,
+        flightDto.price.currencyCode
+      )
     }
-      .map(_.flatten)
   }
 }
 
-case class WizzairTimetableResponse(
-  ArrivalStationCode: String,         //BUD
-  DepartureStationCode: String,       //IEV
-  MinimumPrice: Option[String],       // 2 090,00UAH
-  Date: LocalDate,                    // 20170626
-  Flights: List[WizzairFlightInfoDto]
+private case class WizzairTimetableResponse(
+  outboundFlights: List[WizzairFlightInfoDto],
+  returnFlights: List[WizzairFlightInfoDto]
 )
 
-case class WizzairFlightInfoDto(
-  CarrierCode: String,    // W6
-  FlightNumber: String,   // 6275
-  STA: LocalTime,         // hh:mm
-  STD: LocalTime          // hh:mm
+private case class WizzairFlightInfoDto(
+  departureStation: String,
+  arrivalStation: String,
+  departureDate: LocalDateTime,
+  price: WizzairFlightPriceDto,
+  priceType: String,
+  departureDates: List[LocalDateTime],
+  classOfService: String,
+  hasMacFlight: Boolean
+)
+
+private case class WizzairFlightPriceDto(
+  amount: Int,
+  currencyCode: String
 )
 
 object WizzairWorker {
 
   def props(): Props = Props(new WizzairWorker)
 
-  val API_ROOT = "https://cdn.static.wizzair.com"
-  val TIMETABLE_ROOT = s"$API_ROOT/en-GB/TimeTableAjax"
   val CONN_TIMEOUT = 10000
   val READ_TIMEOUT = 10000
 }
