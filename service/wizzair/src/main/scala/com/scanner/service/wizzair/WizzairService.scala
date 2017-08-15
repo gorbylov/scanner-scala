@@ -48,7 +48,7 @@ class WizzairService extends Actor
       val currentSender = sender()
 
       val futureResponses = (from, to).toMonthsInterval().map { date =>
-        (wizzairRouter ? GetWizzairFlightsMessage(origin.iata, arrival.iata, date.getYear, date.getMonth.getValue))
+        (wizzairRouter ? GetWizzairFlightsMessage(origin.iata, arrival.iata, date))
           .mapTo[WizzairResponse]
       }.sequence
 

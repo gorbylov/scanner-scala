@@ -1,6 +1,7 @@
 package com.scanner.message.wizzair
 
-import java.time.LocalDateTime
+import java.time.LocalDate
+
 import com.scanner.message.core.{Message, Response}
 
 /**
@@ -14,8 +15,7 @@ case class WizzairFailure(error: Throwable, message: String) extends WizzairResp
 case class GetWizzairFlightsMessage(
   origin: String,
   arrival: String,
-  year: Int,
-  month: Int
+  date: LocalDate
 ) extends WizzairMessage
 case class GetWizzairFlightsResponse(
   flights: List[WizzairFlightView]

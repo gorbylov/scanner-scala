@@ -1,6 +1,7 @@
 package com.scanner.service.wizzair
 
-import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, LocalDateTime}
 
 import akka.actor.{Actor, ActorLogging, Props}
 import com.scanner.message.core.Message
@@ -27,9 +28,9 @@ class WizzairWorker extends Actor
 
   override def handleMessage: Function[Message, Unit] = {
 
-    case GetWizzairFlightsMessage(origin, arrival, year, month) => // TODO send LocalDate instead of year and month
+    case GetWizzairFlightsMessage(origin, arrival,date) => // TODO send LocalDate instead of year and month
       val currentSender = sender()
-      flights(origin, arrival, year, month)
+      flights(origin, arrival,date)
         .map(GetWizzairFlightsResponse)
         .onComplete{
           case Success(response) =>
@@ -39,21 +40,22 @@ class WizzairWorker extends Actor
         }
   }
 
-  def flights(origin: String, arrival: String, year: Int, month: Int): Future[List[WizzairFlightView]] = {
+  def flights(origin: String, arrival: String, date:LocalDate): Future[List[WizzairFlightView]] = {
+    val (startDay,endDay) = makeDateForRequest(date)
     val data = s"""
       |{
       |  "flightList": [
       |    {
       |      "departureStation": "$origin",
       |      "arrivalStation": "$arrival",
-      |      "from": "$year-$month-01",
-      |      "to": "$year-$month-28"
+      |      "from": "$startDay",
+      |      "to": "$endDay"
       |    },
       |    {
       |      "departureStation": "$arrival",
       |      "arrivalStation": "$origin",
-      |      "from": "$year-$month-01",
-      |      "to": "$year-$month-28"
+      |      "from": "$startDay",
+      |      "to": "$endDay"
       |    }
       |  ],
       |  "priceType": "regular"
@@ -83,6 +85,12 @@ class WizzairWorker extends Actor
         flightDto.price.currencyCode
       )
     }
+  }
+  def makeDateForRequest(date: LocalDate): (String,String) ={
+    val d1 = date.withDayOfMonth(1)
+    val d2 = date.withDayOfMonth(date.lengthOfMonth())
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    (d1.format(formatter), d2.format(formatter))
   }
 }
 
