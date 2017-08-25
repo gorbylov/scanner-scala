@@ -1,15 +1,12 @@
-package com.scanner.service.wizzair
+package com.scanner.service.wizzair.actor
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.message.api.{GetConnectionsMessage, GetConnectionsResponse, GetFlightsResponse}
+import com.scanner.message.api.{GetConnectionsMessage, GetConnectionsResponse}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
 
-/**
-  * Created by Iurii on 13-06-2017.
-  */
 class WizzairServiceSpec extends TestKit(ActorSystem("testSystem"))
                                  with ImplicitSender
                                  with WordSpecLike

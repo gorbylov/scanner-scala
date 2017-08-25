@@ -1,4 +1,4 @@
-package com.scanner.service.wizzair
+package com.scanner.service.wizzair.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
@@ -14,26 +14,22 @@ import scala.concurrent.duration._
 import com.scanner.service.core.utils.Dates._
 import com.scanner.service.core.utils.Exceptions.ExceptionUtils
 import com.scanner.service.core.utils.SequenceUtils._
+import com.scanner.service.wizzair.utils.WizzairApiFetcher
+impoyrt io.circe.generic.auto._
 
-import scala.concurrent.Future
-import scala.io.Source
-import io.circe.generic.auto._
-import io.circe.parser._
-
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 /**
   * Created by IGorbylov on 04.04.2017.
   */
-class WizzairService extends Actor
+class WizzairService(wizzairApiFetcher: WizzairApiFetcher) extends Actor
   with ActorLogging
   with ActorService {
 
-  import WizzairService._
-
   implicit val askTimeout = Timeout(10 seconds)
   val wizzairRouter: ActorRef = context.actorOf(
-    WizzairWorker.props().withRouter(RoundRobinPool(5)), // TODO move routers count to config
+    WizzairWorker.props(wizzairApiFetcher).withRouter(RoundRobinPool(5)), // TODO move routers count to config
     "wizzairRouter"
   )
 
@@ -41,7 +37,7 @@ class WizzairService extends Actor
   override def handleMessage: Function[Message, Unit] = {
 
     case GetConnectionsMessage =>
-      val futureConnections = fetchWizzairConnections()
+      val futureConnections = wizzairApiFetcher.fetchConnections()
       futureConnections pipeTo sender()
 
     case GetFlightsMessage(stepIndex, stepsCount, origin, arrival, from, to, currency) =>
@@ -82,36 +78,9 @@ class WizzairService extends Actor
             log.error(error.mkString())
         }
   }
-
-  def fetchWizzairConnections(): Future[GetConnectionsResponse] = {
-    val futureConnections = for {
-      content <- Future(Source.fromURL(s"$apiRoot/asset/map?languageCode=en-gb", "UTF-8").mkString)
-      json <- Future.fromTry(parse(content).toTry)
-      connections <- Future.fromTry(json.as[WizzairCities].toTry)
-    } yield connections
-
-    futureConnections
-      .map(cities => cities.cities.map(city => city.iata -> city.connections.map(_.iata)).toMap)
-      .map(GetConnectionsResponse)
-  }
-
 }
 
 object WizzairService {
-
-  def props(): Props = Props(new WizzairService())
-
-  val apiVersion = "6.3.0" // TODO find out how to get api version https://wizzair.com/static/metadata.json
-  val apiRoot = s"https://be.wizzair.com/$apiVersion/Api"
-
-  case class WizzairCities(cities: List[WizzairCity])
-  case class WizzairCity(
-    iata: String,
-    shortName: String,
-    latitude: BigDecimal,
-    longitude: BigDecimal,
-    connections: List[WizzairConnection]
-  )
-  case class WizzairConnection(iata: String)
-
+  def props(wizzairApiFetcher: WizzairApiFetcher): Props =
+    Props(new WizzairService(wizzairApiFetcher))
 }

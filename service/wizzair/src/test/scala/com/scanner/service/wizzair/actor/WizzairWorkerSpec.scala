@@ -1,13 +1,8 @@
-package com.scanner.service.wizzair
-
-import java.time.LocalDate
+package com.scanner.service.wizzair.actor
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import com.scanner.message.api.{GetFlightsMessage, GetFlightsResponse, FlightView}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-
-import scala.concurrent.duration._
 
 /**
   * Created by IGorbylov on 08.06.2017.
