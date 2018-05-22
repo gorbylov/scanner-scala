@@ -8,4 +8,5 @@ import com.typesafe.config.ConfigFactory
 trait ClusterConfig {
   val clusterConfig = ConfigFactory.load()
   val systemName = clusterConfig.getString("scanner.system.name")
+  val serviceName = clusterConfig.getString("scanner.service.name")
 }

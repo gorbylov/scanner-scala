@@ -1,95 +1,49 @@
-import sbt.Keys._
+import Dependencies._
+import Dsl._
 import sbt._
 
-val baseSettings = Seq(
-  organization := "com.scanner",
-  version := "1.0",
-  scalaVersion := "2.12.1"
+lazy val baseSettings: BaseSettings = BaseSettings("com.scanner", "0.0.1", "2.12.6")
+
+lazy val root = (project in file(".")).aggregate(protocol, core, api, currency, wizzair)
+
+val protocol = module(
+  name = "protocol",
+  baseSettings = baseSettings
 )
 
-def module(
-  name: String,
-  location: String,
-  dependencies: Seq[ClasspathDep[ProjectReference]] = Nil,
-  libs: Seq[ModuleID] = Nil
-) = Project(name, file(location), dependencies = dependencies)
-  .settings(baseSettings)
-  .settings(libraryDependencies ++= libs)
-
-def service(
-  name: String, location: String,
-  dependencies: Seq[ClasspathDep[ProjectReference]] = Nil,
-  libs: Seq[ModuleID] = Nil
-) = module(name, location, dependencies, libs)
-  .settings(Seq(fork in run := false))
-
-// Dependencies
-// akka
-val akkaVersion = "2.4.17"
-val akkaHttpVersion = "10.0.4"
-val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
-val akkaCluster = "com.typesafe.akka" %% "akka-cluster" % akkaVersion
-val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
-val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
-val akkaCirce = "de.heikoseeberger" %% "akka-http-circe" % "1.12.0"
-//http
-val scalajHttp = "org.scalaj" %% "scalaj-http" % "2.3.0"
-//json
-val circeSuite = Seq(
-  "io.circe" %% "circe-generic",
-  "io.circe" %% "circe-parser"
-).map(_ % "0.7.0")
-// logging
-val logback = "ch.qos.logback" % "logback-classic" % "1.1.6"
-val typeSafeLogs = "com.typesafe.scala-logging" % "scala-logging-slf4j_2.11" % "2.1.2"
-//test
-val akkaTest = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
-val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-val scalaMock = "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0" % "test"
-val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % "10.0.4" % "test"
-
-// Project
-lazy val root = (project in file("."))
-  .aggregate(message, core, api, currency)
-  .settings(name := """scanner-server""")
-  .settings(baseSettings)
-
-//protocol
-lazy val message = module(
-  name = "message",
-  location = "protocol/message"
-)
-
-//cluster
-lazy val clusterSeed = service(
+lazy val clusterSeed = module(
   name = "cluster-seed",
-  location = "cluster-seed",
-  dependencies = Seq(message),
-  libs = Seq(akkaActor, akkaCluster)
+  baseSettings = baseSettings,
+  dependsOn = Seq(protocol),
+  compileLibs = Seq(akkaActor, akkaCluster)
 )
 
-//services
 lazy val core = module(
   name = "core",
-  location = "service/core",
-  dependencies = Seq(message),
-  libs = Seq(akkaActor, akkaCluster, akkaHttp, akkaCirce, akkaSlf4j, logback, typeSafeLogs, scalaTest, akkaTest)
+  baseSettings = baseSettings,
+  dependsOn = Seq(protocol),
+  compileLibs = Seq(akkaActor, akkaCluster, akkaHttp, akkaCirce, scalaTest, akkaTest)
 )
-lazy val currency = service(
-  name = "currency",
-  location = "service/currency",
-  dependencies = Seq(core, message),
-  libs = Seq(scalaTest, scalaMock, akkaTest) ++ circeSuite
-)
-lazy val api = service(
+
+lazy val api = module(
   name = "api",
-  location = "service/api",
-  dependencies = Seq(core % "compile->compile;test->test", message),
-  libs = Seq(scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
+  baseSettings = baseSettings,
+  dependsOn = Seq(protocol, core % "compile->compile;test->test"),
+  compileLibs = Seq(circeGenerics, circeParcer),
+  testLibs = Seq(scalaTest, akkaTest, akkaHttpTest)
 )
-lazy val wizzair = service(
+
+lazy val currency = module(
+  name = "currency",
+  baseSettings = baseSettings,
+  dependsOn = Seq(core, protocol),
+  compileLibs = Seq(scalaTest, scalaMock, akkaTest, circeGenerics, circeParcer)
+)
+
+lazy val wizzair = module(
   name = "wizzair",
-  location = "service/wizzair",
-  dependencies = Seq(core, message),
-  libs = Seq(scalajHttp, scalaTest, akkaTest, akkaHttpTest) ++ circeSuite
+  baseSettings = baseSettings,
+  dependsOn = Seq(core, protocol),
+  compileLibs = Seq(scalajHttp, circeGenerics, circeParcer),
+  testLibs = Seq(scalaTest, akkaTest, akkaHttpTest)
 )

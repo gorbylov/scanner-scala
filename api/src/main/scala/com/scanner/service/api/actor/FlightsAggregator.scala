@@ -1,0 +1,43 @@
+package com.scanner.service.api.actor
+
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import com.scanner.protocol.api._
+import com.scanner.protocol.core.{Message, TestMessage}
+import com.scanner.core.actor.ActorService
+
+/**
+  * Created by igorbylov on 13.07.17.
+  */
+class FlightsAggregator(apiService: ActorRef) extends Actor
+  with ActorLogging
+  with ActorService {
+
+  type RequestId = String
+  type Path = List[List[FlightView]]
+
+  var state : Map[RequestId, List[Path]] = Map.empty // TODO timeout
+
+  override def handleMessage: Function[Message, Unit] = {
+    case AggregateFlights(requestId, pathsCount, flights) =>
+      val newPaths = state.get(requestId).fold(flights :: Nil){ existedPaths =>
+        flights :: existedPaths
+      }
+
+      newPaths match {
+        case it if it.size == pathsCount =>
+          apiService ! RequestResponse(requestId, newPaths.flatten)
+          state = state - requestId
+        case _ =>
+          state = state + (requestId -> newPaths)
+      }
+  }
+
+  override def handleTestMessage: Function[TestMessage, Unit] = {
+    case GetFlightsAggregatorStateMessage =>
+      sender() ! GetFlightsAggregatorStateResponse(state)
+  }
+}
+
+object FlightsAggregator {
+  def props(apiService: ActorRef): Props = Props(new FlightsAggregator(apiService))
+}
