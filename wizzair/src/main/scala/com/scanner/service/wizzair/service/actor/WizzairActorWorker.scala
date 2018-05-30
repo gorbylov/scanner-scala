@@ -1,26 +1,20 @@
-package com.scanner.service.wizzair.actor
+package com.scanner.service.wizzair.service.actor
 
 import java.time.LocalDate
 
 import akka.actor.{Actor, ActorLogging, Props}
-import com.scanner.protocol.core.Message
-import com.scanner.protocol.wizzair._
-import com.scanner.core.actor.ActorService
 import com.scanner.core.utils.Exceptions.ExceptionUtils
-import com.scanner.service.wizzair.json.WizzairCodecs._
-import com.scanner.service.wizzair.utils.WizzairApiFetcher
-import io.circe.generic.auto._
+import com.scanner.protocol.wizzair._
+import com.scanner.service.wizzair.service.WizzairService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class WizzairWorker(wizzairApiFetcher: WizzairApiFetcher) extends Actor
-  with ActorLogging
-  with ActorService {
+class WizzairActorWorker(wizzairService: WizzairService) extends Actor
+  with ActorLogging {
 
-  override def handleMessage: Function[Message, Unit] = {
-
+  override def receive: Receive = {
     case GetWizzairFlightsMessage(origin, arrival, date) =>
       val currentSender = sender()
       flights(origin, arrival,date)
@@ -33,8 +27,9 @@ class WizzairWorker(wizzairApiFetcher: WizzairApiFetcher) extends Actor
         }
   }
 
+
   def flights(origin: String, arrival: String, date: LocalDate): Future[List[WizzairFlightView]] = {
-    val futureTimetable = wizzairApiFetcher.fetchTimetableFlights(
+    val futureTimetable = wizzairService.fetchFlights(
       origin,
       arrival,
       date.withDayOfMonth(1),
@@ -58,7 +53,6 @@ class WizzairWorker(wizzairApiFetcher: WizzairApiFetcher) extends Actor
   }
 }
 
-object WizzairWorker {
-  def props(wizzairApiFetcher: WizzairApiFetcher): Props =
-    Props(new WizzairWorker(wizzairApiFetcher))
+object WizzairActorWorker {
+  def props(wizzairService: WizzairService): Props = Props(new WizzairActorWorker(wizzairService))
 }

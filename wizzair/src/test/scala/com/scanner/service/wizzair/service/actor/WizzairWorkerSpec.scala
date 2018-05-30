@@ -1,4 +1,4 @@
-package com.scanner.service.wizzair.actor
+package com.scanner.service.wizzair.service.actor
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
@@ -15,7 +15,7 @@ class WizzairWorkerSpec extends TestKit(ActorSystem("testSystem"))
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
-  val wizzairWorker = TestActorRef[WizzairWorker]
+  val wizzairWorker = TestActorRef[WizzairActorWorker]
 
   "WizzairWorker" should  {
     "return list of flights for specified direction and dates" in {

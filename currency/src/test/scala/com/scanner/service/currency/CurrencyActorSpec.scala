@@ -5,7 +5,7 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import com.scanner.protocol.currency._
 import com.scanner.service.currency.ApilayerService.CurrencyResponse
 import com.scanner.service.currency.service.ApilayerService
-import com.scanner.service.currency.service.impl.CurrencyService
+import com.scanner.service.currency.service.actor.CurrencyActor
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by Iurii on 06-03-2017.
   */
-class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
+class CurrencyActorSpec extends TestKit(ActorSystem("testSystem"))
   with ImplicitSender
   with WordSpecLike
   with Matchers
@@ -36,7 +36,7 @@ class CurrencyServiceSpec extends TestKit(ActorSystem("testSystem"))
       .expects()
       .returns(Future(CurrencyResponse(testState)))
 
-    val currencyService = TestActorRef(new CurrencyService(apilayerServiceMock))
+    val currencyService = TestActorRef(new CurrencyActor(apilayerServiceMock))
 
     "update currencies state" in {
       currencyService ! UpdateCurrencyStateMessage

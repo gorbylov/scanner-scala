@@ -4,7 +4,7 @@ import com.scanner.service.currency.model.Currencies
 
 import scala.concurrent.Future
 
-trait CurrencyFetcher {
+trait CurrencyService {
 
   /**
     * Fetches currency rates from 3rd party service

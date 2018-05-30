@@ -1,4 +1,4 @@
-package com.scanner.service.currency.service.impl
+package com.scanner.service.currency.service.actor
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props, Stash}
 import akka.pattern.pipe
@@ -6,13 +6,14 @@ import akka.stream.Materializer
 import com.scanner.protocol.currency._
 import com.scanner.service.currency.CurrencyConfig
 import com.scanner.service.currency.model.CurrencyState
-import com.scanner.service.currency.protocol.{CurrenciesFetched, CurrenciesFetchingFailed, FetchCurrencies, CurrencyInitializationMessage}
-import com.scanner.service.currency.service.CurrencyFetcher
+import com.scanner.service.currency.protocol.{CurrenciesFetched, CurrenciesFetchingFailed, CurrencyInitializationMessage, FetchCurrencies}
+import com.scanner.service.currency.service.CurrencyService
+import com.scanner.service.currency.service.impl.ApilayerCurrencyService
 
 import scala.concurrent.ExecutionContext
 
-class CurrencyService(
-  currencyFetcher: CurrencyFetcher
+class CurrencyActor(
+  currencyFetcher: CurrencyService
 )(implicit ec: ExecutionContext, as: ActorSystem) extends Actor
   with Stash
   with ActorLogging
@@ -72,9 +73,9 @@ class CurrencyService(
   def calculateCoefficient(from: String, to: String): Option[BigDecimal] = convertCurrency(from, to, 1)
 }
 
-object CurrencyService {
+object CurrencyActor {
   def props()(implicit ec: ExecutionContext, as: ActorSystem, m: Materializer): Props = {
-    Props(new CurrencyService(new ApilayerCurrencyFetcher()))
+    Props(new CurrencyActor(new ApilayerCurrencyService()))
   }
 }
 

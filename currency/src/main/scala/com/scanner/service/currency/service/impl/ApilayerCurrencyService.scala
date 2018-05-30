@@ -7,17 +7,17 @@ import akka.stream.Materializer
 import akka.util.ByteString
 import com.scanner.service.currency.CurrencyConfig
 import com.scanner.service.currency.model.Currencies
-import com.scanner.service.currency.service.CurrencyFetcher
-import com.scanner.service.currency.service.impl.ApilayerCurrencyFetcher.ApilayerCurrencies
+import com.scanner.service.currency.service.CurrencyService
+import com.scanner.service.currency.service.impl.ApilayerCurrencyService.ApilayerCurrencies
 import io.circe.parser.parse
 import io.circe.generic.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ApilayerCurrencyFetcher()(implicit ec: ExecutionContext, as: ActorSystem, m: Materializer) extends CurrencyFetcher
+class ApilayerCurrencyService()(implicit ec: ExecutionContext, as: ActorSystem, m: Materializer) extends CurrencyService
   with CurrencyConfig {
 
-  import ApilayerCurrencyFetcher.apiUri
+  import ApilayerCurrencyService.apiUri
 
   /** @inheritdoc */
   override def fetch(): Future[Currencies] = {
@@ -30,7 +30,7 @@ class ApilayerCurrencyFetcher()(implicit ec: ExecutionContext, as: ActorSystem, 
   }
 }
 
-object ApilayerCurrencyFetcher {
+object ApilayerCurrencyService {
   val apiUri = s"http://www.apilayer.net/api/live"
 
   case class ApilayerCurrencies(quotes: Map[String, BigDecimal])
